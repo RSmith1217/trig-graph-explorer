@@ -846,16 +846,16 @@ input[type="range"]::-moz-range-thumb {
 .analysis-row strong {
   min-height: 1.5em;
   color: var(--ink);
-  font-size: 1.58rem;
+  font-size: 1.92rem;
   font-weight: 900;
-  line-height: 1.25;
+  line-height: 1.12;
   text-align: right;
   justify-self: end;
   letter-spacing: -0.03em;
 }
 
 .analysis-row .katex {
-  font-size: 1.08em;
+  font-size: 1.12em;
   font-weight: 700;
 }
 
