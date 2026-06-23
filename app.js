@@ -56,6 +56,7 @@ const elements = {
   transformXCenterLabel: document.querySelector("#transformXCenterLabel"),
   transformXRightLabel: document.querySelector("#transformXRightLabel"),
   transformAxisLabels: document.querySelector("#transformAxisLabels"),
+  piStepButtons: document.querySelectorAll("[data-pi-target]"),
 };
 
 const colors = {
@@ -758,6 +759,7 @@ function updateReadout() {
 function updateTransformReadout() {
   const { A, B, C, D } = transformParameters();
   const family = transformFamily === "sin" ? "\\sin" : "\\cos";
+  const bTerm = formatPiMultiple(B);
   const dTerm = plusMinusLatex(D);
   const amplitude = Math.abs(A);
   const constantValue = transformFamily === "sin" ? D : A + D;
@@ -774,7 +776,7 @@ function updateTransformReadout() {
 
   renderMath(
     elements.transformEquation,
-    `y=${formatCompactNumber(A)}${family}\\left[${formatCompactNumber(B)}\\left(x${shiftTerm}\\right)\\right]${dTerm}`,
+    `y=${formatCompactNumber(A)}${family}\\left[${bTerm}\\left(x${shiftTerm}\\right)\\right]${dTerm}`,
   );
   renderMath(elements.analysisAmplitude, formatCompactNumber(amplitude));
   renderMath(elements.analysisPeriod, period === null ? "\\text{undefined}" : formatPiMultiple(period));
@@ -994,6 +996,25 @@ const parameterPairs = [
   [elements.paramD, elements.paramDNumber],
 ];
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function cleanParameterValue(value) {
+  if (Math.abs(value) < 0.000001) return "0";
+  return `${Number(value.toFixed(6))}`;
+}
+
+function setParameterPairValue(slider, number, value, shouldCenterOnC = false) {
+  const min = Number(number.min);
+  const max = Number(number.max);
+  const nextValue = clamp(value, min, max);
+  number.value = cleanParameterValue(nextValue);
+  slider.value = `${clamp(nextValue, Number(slider.min), Number(slider.max))}`;
+  if (shouldCenterOnC) transformXCenter = nextValue;
+  renderTransform();
+}
+
 function syncParameter(source, target, shouldCenterOnC = false) {
   target.value = source.value;
   if (shouldCenterOnC) {
@@ -1007,6 +1028,23 @@ parameterPairs.forEach(([slider, number]) => {
   const isCParameter = slider === elements.paramC;
   slider.addEventListener("input", () => syncParameter(slider, number, isCParameter));
   number.addEventListener("input", () => syncParameter(number, slider, isCParameter));
+});
+
+elements.piStepButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const target = button.dataset.piTarget;
+    const direction = Number(button.dataset.piDirection);
+    const step = Math.PI / 12;
+    const slider = target === "B" ? elements.paramB : elements.paramC;
+    const number = target === "B" ? elements.paramBNumber : elements.paramCNumber;
+    const currentValue = Number(number.value) || 0;
+    const currentStep = currentValue / step;
+    const nextStep =
+      direction > 0
+        ? Math.floor(currentStep + 0.000001) + 1
+        : Math.ceil(currentStep - 0.000001) - 1;
+    setParameterPairValue(slider, number, nextStep * step, target === "C");
+  });
 });
 
 window.addEventListener("resize", () => {

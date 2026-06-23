@@ -300,11 +300,29 @@
                 <span><i data-math="B">B</i> Period factor</span>
                 <input id="paramB" type="range" min="-4" max="4" step="0.25" value="1" />
                 <input id="paramBNumber" type="number" min="-8" max="8" step="0.25" value="1" aria-label="B value" />
+                <div class="pi-stepper" aria-label="Adjust B by pi increments">
+                  <button type="button" data-pi-target="B" data-pi-direction="-1">
+                    <span data-math="-\frac{\pi}{12}">−π/12</span>
+                  </button>
+                  <span>π step</span>
+                  <button type="button" data-pi-target="B" data-pi-direction="1">
+                    <span data-math="+\frac{\pi}{12}">+π/12</span>
+                  </button>
+                </div>
               </label>
               <label class="parameter-control">
                 <span><i data-math="C">C</i> Horizontal shift</span>
                 <input id="paramC" type="range" min="-6.28" max="6.28" step="0.01" value="0" />
                 <input id="paramCNumber" type="number" min="-12.57" max="12.57" step="0.01" value="0" aria-label="C value" />
+                <div class="pi-stepper" aria-label="Adjust C by pi increments">
+                  <button type="button" data-pi-target="C" data-pi-direction="-1">
+                    <span data-math="-\frac{\pi}{12}">−π/12</span>
+                  </button>
+                  <span>π step</span>
+                  <button type="button" data-pi-target="C" data-pi-direction="1">
+                    <span data-math="+\frac{\pi}{12}">+π/12</span>
+                  </button>
+                </div>
               </label>
               <label class="parameter-control">
                 <span><i data-math="D">D</i> Vertical shift</span>
