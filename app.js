@@ -41,6 +41,8 @@ const elements = {
   paramBNumber: document.querySelector("#paramBNumber"),
   paramCNumber: document.querySelector("#paramCNumber"),
   paramDNumber: document.querySelector("#paramDNumber"),
+  paramBExact: document.querySelector("#paramBExact"),
+  paramCExact: document.querySelector("#paramCExact"),
   analysisAmplitude: document.querySelector("#analysisAmplitude"),
   analysisPeriod: document.querySelector("#analysisPeriod"),
   analysisIncrement: document.querySelector("#analysisIncrement"),
@@ -803,6 +805,8 @@ function updateTransformReadout() {
     elements.analysisRange,
     `\\left[${formatCompactNumber(rangeLow)},${formatCompactNumber(rangeHigh)}\\right]`,
   );
+  renderMath(elements.paramBExact, bTerm);
+  renderMath(elements.paramCExact, formatPiMultiple(C));
 }
 
 function render() {
@@ -1038,7 +1042,9 @@ elements.piStepButtons.forEach((button) => {
     const slider = target === "B" ? elements.paramB : elements.paramC;
     const number = target === "B" ? elements.paramBNumber : elements.paramCNumber;
     const currentValue = Number(number.value) || 0;
-    const currentStep = currentValue / step;
+    const rawStep = currentValue / step;
+    const nearestStep = Math.round(rawStep);
+    const currentStep = Math.abs(rawStep - nearestStep) < 0.01 ? nearestStep : rawStep;
     const nextStep =
       direction > 0
         ? Math.floor(currentStep + 0.000001) + 1

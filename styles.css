@@ -1027,6 +1027,19 @@ input[type="range"]::-moz-range-thumb {
   margin-top: -1px;
 }
 
+.pi-stepper output {
+  grid-column: 1 / -1;
+  display: grid;
+  min-height: 32px;
+  place-items: center;
+  border: 1px solid rgba(47, 111, 237, 0.22);
+  border-radius: 10px;
+  color: var(--period);
+  background: rgba(47, 111, 237, 0.07);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
 .pi-stepper > span {
   color: var(--ink-soft);
   font-size: 0.58rem;
@@ -1056,6 +1069,10 @@ input[type="range"]::-moz-range-thumb {
 
 .pi-stepper .katex {
   font-size: 1em;
+}
+
+.pi-stepper output .katex {
+  font-size: 1.05em;
 }
 
 .tangent-panel {
