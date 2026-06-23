@@ -628,12 +628,7 @@ function drawTransformGraph() {
 
   if (Math.abs(B) >= transformEpsilon) {
     const period = (2 * Math.PI) / Math.abs(B);
-    const cyclesFromLeft = Math.floor((xMin - C) / period);
-    let highlightStart = C + cyclesFromLeft * period;
-    while (highlightStart + period < xMin) highlightStart += period;
-    if (highlightStart < xMin - transformEpsilon) highlightStart += period;
-    if (highlightStart > xMax) highlightStart -= period;
-    drawCurveSegment(highlightStart, highlightStart + period, colors.period, 6.4);
+    drawCurveSegment(C, C + period, colors.period, 6.4);
   }
 
   renderMath(elements.transformTopLabel, formatCompactNumber(naturalMax));
