@@ -716,7 +716,7 @@ function updateTransformReadout() {
 
   renderMath(
     elements.transformEquation,
-    `y=${formatCompactNumber(A)}${family}\\left(${formatCompactNumber(B)}\\left(x${shiftTerm}\\right)\\right)${dTerm}`,
+    `y=${formatCompactNumber(A)}${family}\\left[${formatCompactNumber(B)}\\left(x${shiftTerm}\\right)\\right]${dTerm}`,
   );
   renderMath(elements.analysisAmplitude, formatCompactNumber(amplitude));
   renderMath(elements.analysisPeriod, period === null ? "\\text{undefined}" : formatPiMultiple(period));
