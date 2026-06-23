@@ -879,6 +879,15 @@ input[type="range"]::-moz-range-thumb {
   border-bottom: 1px solid var(--grid);
 }
 
+#transformCanvas {
+  cursor: grab;
+  touch-action: none;
+}
+
+#transformCanvas:active {
+  cursor: grabbing;
+}
+
 .transform-y-top,
 .transform-y-mid,
 .transform-y-bottom {
@@ -915,6 +924,44 @@ input[type="range"]::-moz-range-thumb {
 
 .transform-x-right {
   right: 20px;
+}
+
+.axis-label-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.axis-increment-label {
+  position: absolute;
+  z-index: 3;
+  padding: 2px 4px;
+  border-radius: 6px;
+  color: var(--period);
+  background: rgba(255, 253, 248, 0.78);
+  font-size: 0.66rem;
+  font-weight: 800;
+  transform: translate(-50%, 0);
+  white-space: nowrap;
+}
+
+.axis-increment-label .katex {
+  font-size: 1em;
+}
+
+.pan-hint {
+  position: absolute;
+  right: 16px;
+  top: 14px;
+  z-index: 3;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-soft);
+  background: rgba(255, 253, 248, 0.88);
+  font-size: 0.64rem;
+  font-weight: 800;
+  pointer-events: none;
 }
 
 .parameter-grid {

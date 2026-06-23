@@ -52,6 +52,10 @@ const elements = {
   transformTopLabel: document.querySelector("#transformTopLabel"),
   transformMidLabel: document.querySelector("#transformMidLabel"),
   transformBottomLabel: document.querySelector("#transformBottomLabel"),
+  transformXLeftLabel: document.querySelector("#transformXLeftLabel"),
+  transformXCenterLabel: document.querySelector("#transformXCenterLabel"),
+  transformXRightLabel: document.querySelector("#transformXRightLabel"),
+  transformAxisLabels: document.querySelector("#transformAxisLabels"),
 };
 
 const colors = {
@@ -73,6 +77,10 @@ let dragging = false;
 let lastFrame = 0;
 let activeView = "explore";
 let transformFamily = "sin";
+let transformXCenter = 0;
+let transformDragging = false;
+let transformDragStartX = 0;
+let transformDragStartCenter = 0;
 const transformEpsilon = 0.01;
 
 const specialAngles = [
@@ -251,6 +259,26 @@ function transformParameters() {
 function transformValue(x, { A, B, C, D }) {
   const input = B * (x - C);
   return A * (transformFamily === "sin" ? Math.sin(input) : Math.cos(input)) + D;
+}
+
+function niceGridStep(target) {
+  const safeTarget = Math.max(Math.abs(target), 0.0001);
+  const exponent = Math.floor(Math.log10(safeTarget));
+  const base = safeTarget / 10 ** exponent;
+  const niceBase = base <= 1 ? 1 : base <= 2 ? 2 : base <= 2.5 ? 2.5 : base <= 5 ? 5 : 10;
+  return niceBase * 10 ** exponent;
+}
+
+function renderAxisIncrementLabels(labels) {
+  elements.transformAxisLabels.replaceChildren();
+  labels.forEach(({ latex, left, top }) => {
+    const label = document.createElement("div");
+    label.className = "axis-increment-label";
+    label.style.left = `${left}px`;
+    label.style.top = `${top}px`;
+    elements.transformAxisLabels.append(label);
+    renderMath(label, latex);
+  });
 }
 
 function drawCircle() {
@@ -513,8 +541,9 @@ function drawTransformGraph() {
   const ctx = transformCtx;
   const params = transformParameters();
   const { A, B, C, D } = params;
-  const xMin = -2 * Math.PI;
-  const xMax = 2 * Math.PI;
+  const xSpan = 4 * Math.PI;
+  const xMin = transformXCenter - xSpan / 2;
+  const xMax = transformXCenter + xSpan / 2;
   const amplitude = Math.abs(A);
   const sampleCount = 420;
   const values = [];
@@ -526,9 +555,9 @@ function drawTransformGraph() {
 
   const naturalMin = Math.abs(B) < transformEpsilon ? Math.min(...values, D, 0) : D - amplitude;
   const naturalMax = Math.abs(B) < transformEpsilon ? Math.max(...values, D, 0) : D + amplitude;
-  const span = Math.max(2, naturalMax - naturalMin);
-  const yMin = naturalMin - span * 0.25;
-  const yMax = naturalMax + span * 0.25;
+  const span = Math.max(amplitude * 2, Math.abs(D) * 0.4, 1);
+  const yMin = Math.min(naturalMin, 0) - span * 0.25;
+  const yMax = Math.max(naturalMax, 0) + span * 0.25;
   const plot = { left: 56, top: 25, width: width - 82, height: height - 62 };
 
   const pointFor = (x, y) => ({
@@ -561,15 +590,21 @@ function drawTransformGraph() {
 
   ctx.strokeStyle = colors.grid;
   ctx.lineWidth = 1;
-  for (let i = 0; i <= 8; i++) {
-    const x = plot.left + (i / 8) * plot.width;
+  const xGridStep = Math.PI / 2;
+  const firstXGrid = Math.ceil(xMin / xGridStep) * xGridStep;
+  for (let xValue = firstXGrid; xValue <= xMax + transformEpsilon; xValue += xGridStep) {
+    const x = pointFor(xValue, 0).x;
     ctx.beginPath();
     ctx.moveTo(x, plot.top);
     ctx.lineTo(x, plot.top + plot.height);
     ctx.stroke();
   }
-  for (let i = 0; i <= 4; i++) {
-    const y = plot.top + (i / 4) * plot.height;
+
+  const targetYStep = (yMax - yMin) / 8;
+  const yGridStep = amplitude >= 1 ? Math.max(1, niceGridStep(targetYStep)) : niceGridStep(targetYStep);
+  const firstYGrid = Math.ceil(yMin / yGridStep) * yGridStep;
+  for (let yValue = firstYGrid; yValue <= yMax + transformEpsilon; yValue += yGridStep) {
+    const y = pointFor(0, yValue).y;
     ctx.beginPath();
     ctx.moveTo(plot.left, y);
     ctx.lineTo(plot.left + plot.width, y);
@@ -628,12 +663,35 @@ function drawTransformGraph() {
 
   if (Math.abs(B) >= transformEpsilon) {
     const period = (2 * Math.PI) / Math.abs(B);
+    const increment = period / 4;
     drawCurveSegment(C, C + period, colors.period, 6.4);
+
+    const xAxisLabelTop = Math.max(
+      plot.top + 8,
+      Math.min(plot.top + plot.height - 26, (xAxis >= plot.top && xAxis <= plot.top + plot.height ? xAxis : plot.top + plot.height) + 8),
+    );
+    const labels = [];
+    const labelSpacing = (increment / (xMax - xMin)) * plot.width;
+    const labelCount = labelSpacing < 54 ? 1 : 5;
+    for (let i = 0; i < labelCount; i++) {
+      const xValue = C + i * increment;
+      if (xValue < xMin - transformEpsilon || xValue > xMax + transformEpsilon) continue;
+      const left = pointFor(xValue, 0).x;
+      labels.push({ latex: formatPiMultiple(xValue), left, top: xAxisLabelTop });
+    }
+    renderAxisIncrementLabels(labels);
+  } else {
+    renderAxisIncrementLabels([]);
   }
 
   renderMath(elements.transformTopLabel, formatCompactNumber(naturalMax));
   renderMath(elements.transformMidLabel, formatCompactNumber(D));
   renderMath(elements.transformBottomLabel, formatCompactNumber(naturalMin));
+  renderMath(elements.transformXLeftLabel, formatPiMultiple(xMin));
+  renderMath(elements.transformXCenterLabel, formatPiMultiple(transformXCenter));
+  renderMath(elements.transformXRightLabel, formatPiMultiple(xMax));
+
+  transformCanvas._geometry = { plot, xMin, xMax, yMin, yMax, yGridStep };
 }
 
 function updateReadout() {
@@ -816,6 +874,46 @@ graphCanvas.addEventListener("pointerdown", (event) => {
   setAngle(((bounded - plot.left) / plot.width) * Math.PI * 2);
 });
 
+function setTransformXCenter(value) {
+  transformXCenter = value;
+  renderTransform();
+}
+
+transformCanvas.addEventListener("pointerdown", (event) => {
+  transformDragging = true;
+  transformDragStartX = event.clientX;
+  transformDragStartCenter = transformXCenter;
+  transformCanvas.setPointerCapture(event.pointerId);
+});
+
+transformCanvas.addEventListener("pointermove", (event) => {
+  if (!transformDragging || !transformCanvas._geometry) return;
+  const { plot, xMin, xMax } = transformCanvas._geometry;
+  const xUnitsPerPixel = (xMax - xMin) / plot.width;
+  setTransformXCenter(transformDragStartCenter - (event.clientX - transformDragStartX) * xUnitsPerPixel);
+});
+
+transformCanvas.addEventListener("pointerup", () => {
+  transformDragging = false;
+});
+
+transformCanvas.addEventListener("pointercancel", () => {
+  transformDragging = false;
+});
+
+transformCanvas.addEventListener(
+  "wheel",
+  (event) => {
+    if (!transformCanvas._geometry) return;
+    event.preventDefault();
+    const { plot, xMin, xMax } = transformCanvas._geometry;
+    const horizontalDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+    const xUnitsPerPixel = (xMax - xMin) / plot.width;
+    setTransformXCenter(transformXCenter + horizontalDelta * xUnitsPerPixel);
+  },
+  { passive: false },
+);
+
 elements.angleSlider.addEventListener("input", (event) => {
   playing = false;
   updatePlayButton();
@@ -896,14 +994,19 @@ const parameterPairs = [
   [elements.paramD, elements.paramDNumber],
 ];
 
-function syncParameter(source, target) {
+function syncParameter(source, target, shouldCenterOnC = false) {
   target.value = source.value;
+  if (shouldCenterOnC) {
+    const nextCenter = Number(source.value);
+    if (Number.isFinite(nextCenter)) transformXCenter = nextCenter;
+  }
   renderTransform();
 }
 
 parameterPairs.forEach(([slider, number]) => {
-  slider.addEventListener("input", () => syncParameter(slider, number));
-  number.addEventListener("input", () => syncParameter(number, slider));
+  const isCParameter = slider === elements.paramC;
+  slider.addEventListener("input", () => syncParameter(slider, number, isCParameter));
+  number.addEventListener("input", () => syncParameter(number, slider, isCParameter));
 });
 
 window.addEventListener("resize", () => {
