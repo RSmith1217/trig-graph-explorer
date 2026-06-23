@@ -63,6 +63,7 @@ const colors = {
   cosine: "#277a70",
   tangent: "#8b65a6",
   gold: "#e3ad3e",
+  period: "#2f6fed",
 };
 
 let angle = Math.PI / 4;
@@ -632,7 +633,7 @@ function drawTransformGraph() {
     while (highlightStart + period < xMin) highlightStart += period;
     if (highlightStart < xMin - transformEpsilon) highlightStart += period;
     if (highlightStart > xMax) highlightStart -= period;
-    drawCurveSegment(highlightStart, highlightStart + period, colors.gold, 6.4);
+    drawCurveSegment(highlightStart, highlightStart + period, colors.period, 6.4);
   }
 
   renderMath(elements.transformTopLabel, formatCompactNumber(naturalMax));

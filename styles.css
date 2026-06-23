@@ -12,6 +12,7 @@
   --tangent: #8b65a6;
   --tangent-soft: #f1eaf6;
   --gold: #e3ad3e;
+  --period: #2f6fed;
   --shadow: 0 20px 60px rgba(48, 59, 49, 0.08);
 }
 
@@ -826,29 +827,40 @@ input[type="range"]::-moz-range-thumb {
 
 .analysis-row {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 7px;
-  padding: 17px 22px;
+  grid-template-columns: minmax(120px, 1fr) minmax(120px, auto);
+  gap: 18px;
+  align-items: center;
+  padding: 18px 22px;
   border-bottom: 1px solid var(--grid);
 }
 
 .analysis-row span {
   color: var(--ink-soft);
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.06em;
+  line-height: 1.3;
   text-transform: uppercase;
 }
 
 .analysis-row strong {
   min-height: 1.5em;
   color: var(--ink);
-  font-size: 1.32rem;
+  font-size: 1.58rem;
+  font-weight: 900;
   line-height: 1.25;
+  text-align: right;
+  justify-self: end;
+  letter-spacing: -0.03em;
 }
 
 .analysis-row .katex {
   font-size: 1.08em;
+  font-weight: 700;
+}
+
+.analysis-row .katex-html {
+  font-weight: 700;
 }
 
 .metric-note {
@@ -1057,9 +1069,6 @@ kbd {
     justify-content: center;
   }
 
-  .analysis-list {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 700px) {
