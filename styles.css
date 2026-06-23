@@ -834,7 +834,7 @@ input[type="range"]::-moz-range-thumb {
   border-bottom: 1px solid var(--grid);
 }
 
-.analysis-row span {
+.analysis-row > span {
   color: var(--ink-soft);
   font-size: 0.78rem;
   font-weight: 800;
@@ -861,6 +861,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .analysis-row .katex-html {
+  font-size: inherit;
   font-weight: 800;
 }
 
