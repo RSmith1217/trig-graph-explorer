@@ -827,8 +827,8 @@ input[type="range"]::-moz-range-thumb {
 .analysis-row {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 4px;
-  padding: 14px 20px;
+  gap: 7px;
+  padding: 17px 22px;
   border-bottom: 1px solid var(--grid);
 }
 
@@ -843,11 +843,12 @@ input[type="range"]::-moz-range-thumb {
 .analysis-row strong {
   min-height: 1.5em;
   color: var(--ink);
-  font-size: 1rem;
+  font-size: 1.32rem;
+  line-height: 1.25;
 }
 
 .analysis-row .katex {
-  font-size: 1em;
+  font-size: 1.08em;
 }
 
 .metric-note {

@@ -234,11 +234,16 @@ function plusMinusLatex(value, formatter = formatCompactNumber) {
 }
 
 function transformParameters() {
+  const numericValue = (element, fallback = 0) => {
+    const value = Number(element.value);
+    return Number.isFinite(value) ? value : fallback;
+  };
+
   return {
-    A: Number(elements.paramA.value),
-    B: Number(elements.paramB.value),
-    C: Number(elements.paramC.value),
-    D: Number(elements.paramD.value),
+    A: numericValue(elements.paramANumber, 1),
+    B: numericValue(elements.paramBNumber, 1),
+    C: numericValue(elements.paramCNumber, 0),
+    D: numericValue(elements.paramDNumber, 0),
   };
 }
 
@@ -530,6 +535,27 @@ function drawTransformGraph() {
     y: plot.top + ((yMax - y) / (yMax - yMin)) * plot.height,
   });
 
+  const drawCurveSegment = (startX, endX, color, lineWidth) => {
+    const lower = Math.max(xMin, Math.min(startX, endX));
+    const upper = Math.min(xMax, Math.max(startX, endX));
+    if (upper <= lower) return;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+
+    const segmentSteps = Math.max(48, Math.round(((upper - lower) / (xMax - xMin)) * sampleCount));
+    for (let i = 0; i <= segmentSteps; i++) {
+      const x = lower + (i / segmentSteps) * (upper - lower);
+      const p = pointFor(x, transformValue(x, params));
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+  };
+
   ctx.clearRect(0, 0, width, height);
 
   ctx.strokeStyle = colors.grid;
@@ -600,26 +626,13 @@ function drawTransformGraph() {
   ctx.stroke();
 
   if (Math.abs(B) >= transformEpsilon) {
-    const startX = C;
     const period = (2 * Math.PI) / Math.abs(B);
-    const endX = C + period * Math.sign(B || 1);
-    if (startX >= xMin && startX <= xMax && endX >= xMin && endX <= xMax) {
-      const y = Math.min(plot.top + plot.height - 16, Math.max(plot.top + 16, midline + 26));
-      const start = pointFor(startX, D).x;
-      const end = pointFor(endX, D).x;
-      ctx.strokeStyle = "rgba(24, 52, 46, 0.5)";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(start, y);
-      ctx.lineTo(end, y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(start, y - 5);
-      ctx.lineTo(start, y + 5);
-      ctx.moveTo(end, y - 5);
-      ctx.lineTo(end, y + 5);
-      ctx.stroke();
-    }
+    const cyclesFromLeft = Math.floor((xMin - C) / period);
+    let highlightStart = C + cyclesFromLeft * period;
+    while (highlightStart + period < xMin) highlightStart += period;
+    if (highlightStart < xMin - transformEpsilon) highlightStart += period;
+    if (highlightStart > xMax) highlightStart -= period;
+    drawCurveSegment(highlightStart, highlightStart + period, colors.gold, 6.4);
   }
 
   renderMath(elements.transformTopLabel, formatCompactNumber(naturalMax));
