@@ -227,6 +227,100 @@ h2 {
   position: relative;
 }
 
+.circle-math-label,
+.circle-coordinate,
+.graph-math-label {
+  position: absolute;
+  z-index: 2;
+  color: var(--ink-soft);
+  font-size: 0.68rem;
+  pointer-events: none;
+}
+
+.circle-math-label .katex,
+.graph-math-label .katex {
+  font-size: 1em;
+}
+
+.circle-label-positive-x {
+  left: 81%;
+  top: 50%;
+  transform: translate(-50%, 12px);
+}
+
+.circle-label-negative-x {
+  left: 19%;
+  top: 50%;
+  transform: translate(-50%, 12px);
+}
+
+.circle-label-positive-y {
+  left: 50%;
+  top: 16%;
+  transform: translate(9px, -50%);
+}
+
+.circle-label-negative-y {
+  left: 50%;
+  top: 84%;
+  transform: translate(9px, -50%);
+}
+
+.circle-coordinate {
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.circle-coordinate .katex {
+  font-size: 1em;
+}
+
+.graph-math-label {
+  font-size: 0.61rem;
+}
+
+.graph-y-positive {
+  left: 27px;
+  top: 28%;
+}
+
+.graph-y-negative {
+  left: 23px;
+  top: 72%;
+}
+
+.graph-x-zero,
+.graph-x-half-pi,
+.graph-x-pi,
+.graph-x-three-half-pi,
+.graph-x-two-pi {
+  bottom: 9px;
+  transform: translateX(-50%);
+}
+
+.graph-x-zero {
+  left: 6.6%;
+}
+
+.graph-x-half-pi {
+  left: 29.8%;
+}
+
+.graph-x-pi {
+  left: 53.2%;
+}
+
+.graph-x-three-half-pi {
+  left: 76.6%;
+}
+
+.graph-x-two-pi {
+  left: 98.5%;
+  transform: translateX(-100%);
+}
+
 .circle-wrap {
   height: 460px;
 }
@@ -392,6 +486,11 @@ canvas {
   font-size: 2rem;
 }
 
+.angle-readout .katex {
+  color: inherit;
+  font-size: 1em;
+}
+
 .angle-readout > span:last-child {
   color: rgba(255, 255, 255, 0.68);
 }
@@ -445,8 +544,11 @@ canvas {
 }
 
 .value-readout strong {
-  font-family: "DM Mono", monospace;
   font-size: 1.17rem;
+}
+
+.value-readout .katex {
+  font-size: 1em;
 }
 
 .value-readout div > span:last-child {
@@ -501,7 +603,10 @@ canvas {
 
 #sliderValue {
   color: var(--sine);
-  font-family: "DM Mono", monospace;
+}
+
+#sliderValue .katex {
+  font-size: 1em;
 }
 
 input[type="range"] {

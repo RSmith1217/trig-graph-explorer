@@ -12,6 +12,7 @@ const elements = {
   cosineDecimal: document.querySelector("#cosineDecimal"),
   tangentValue: document.querySelector("#tangentValue"),
   tangentDecimal: document.querySelector("#tangentDecimal"),
+  circleCoordinate: document.querySelector("#circleCoordinate"),
   quadrantBadge: document.querySelector("#quadrantBadge"),
   angleSlider: document.querySelector("#angleSlider"),
   sliderValue: document.querySelector("#sliderValue"),
@@ -67,23 +68,49 @@ const specialAngles = [
 
 const exactValues = {
   0: ["0", "1", "0"],
-  30: ["1/2", "√3/2", "√3/3"],
-  45: ["√2/2", "√2/2", "1"],
-  60: ["√3/2", "1/2", "√3"],
-  90: ["1", "0", "undefined"],
-  120: ["√3/2", "−1/2", "−√3"],
-  135: ["√2/2", "−√2/2", "−1"],
-  150: ["1/2", "−√3/2", "−√3/3"],
-  180: ["0", "−1", "0"],
-  210: ["−1/2", "−√3/2", "√3/3"],
-  225: ["−√2/2", "−√2/2", "1"],
-  240: ["−√3/2", "−1/2", "√3"],
-  270: ["−1", "0", "undefined"],
-  300: ["−√3/2", "1/2", "−√3"],
-  315: ["−√2/2", "√2/2", "−1"],
-  330: ["−1/2", "√3/2", "−√3/3"],
+  30: ["\\frac{1}{2}", "\\frac{\\sqrt{3}}{2}", "\\frac{\\sqrt{3}}{3}"],
+  45: ["\\frac{\\sqrt{2}}{2}", "\\frac{\\sqrt{2}}{2}", "1"],
+  60: ["\\frac{\\sqrt{3}}{2}", "\\frac{1}{2}", "\\sqrt{3}"],
+  90: ["1", "0", "\\text{undefined}"],
+  120: ["\\frac{\\sqrt{3}}{2}", "-\\frac{1}{2}", "-\\sqrt{3}"],
+  135: ["\\frac{\\sqrt{2}}{2}", "-\\frac{\\sqrt{2}}{2}", "-1"],
+  150: ["\\frac{1}{2}", "-\\frac{\\sqrt{3}}{2}", "-\\frac{\\sqrt{3}}{3}"],
+  180: ["0", "-1", "0"],
+  210: ["-\\frac{1}{2}", "-\\frac{\\sqrt{3}}{2}", "\\frac{\\sqrt{3}}{3}"],
+  225: ["-\\frac{\\sqrt{2}}{2}", "-\\frac{\\sqrt{2}}{2}", "1"],
+  240: ["-\\frac{\\sqrt{3}}{2}", "-\\frac{1}{2}", "\\sqrt{3}"],
+  270: ["-1", "0", "\\text{undefined}"],
+  300: ["-\\frac{\\sqrt{3}}{2}", "\\frac{1}{2}", "-\\sqrt{3}"],
+  315: ["-\\frac{\\sqrt{2}}{2}", "\\frac{\\sqrt{2}}{2}", "-1"],
+  330: ["-\\frac{1}{2}", "\\frac{\\sqrt{3}}{2}", "-\\frac{\\sqrt{3}}{3}"],
   360: ["0", "1", "0"],
 };
+
+function renderMath(element, latex) {
+  if (element.dataset.latex === latex) return;
+  element.dataset.latex = latex;
+  if (window.katex) {
+    window.katex.render(latex, element, {
+      throwOnError: false,
+      strict: false,
+    });
+  } else {
+    element.textContent = latex
+      .replaceAll("\\frac", "")
+      .replaceAll("\\sqrt", "√")
+      .replaceAll("\\pi", "π")
+      .replaceAll("\\circ", "°")
+      .replaceAll("\\mathrm", "")
+      .replaceAll("\\text", "")
+      .replace(/[{}]/g, "");
+  }
+}
+
+function renderStaticMath() {
+  document.querySelectorAll("[data-math]").forEach((element) => {
+    renderMath(element, element.dataset.math);
+  });
+}
 
 function setupCanvas(canvas, ctx) {
   const rect = canvas.getBoundingClientRect();
@@ -121,13 +148,15 @@ function piFraction(value) {
   const normalized = normalizeAngle(value);
   const twelfths = Math.round((normalized / Math.PI) * 12);
   if (twelfths === 0) return "0";
-  if (twelfths === 24) return "2π";
+  if (twelfths === 24) return "2\\pi";
   const gcd = (a, b) => (b ? gcd(b, a % b) : a);
   const divisor = gcd(twelfths, 12);
   const numerator = twelfths / divisor;
   const denominator = 12 / divisor;
-  if (denominator === 1) return numerator === 1 ? "π" : `${numerator}π`;
-  return numerator === 1 ? `π/${denominator}` : `${numerator}π/${denominator}`;
+  if (denominator === 1) return numerator === 1 ? "\\pi" : `${numerator}\\pi`;
+  return numerator === 1
+    ? `\\frac{\\pi}{${denominator}}`
+    : `\\frac{${numerator}\\pi}{${denominator}}`;
 }
 
 function exactForAngle() {
@@ -177,13 +206,6 @@ function drawCircle() {
   ctx.moveTo(cx, cy + radius + 35);
   ctx.lineTo(cx, cy - radius - 40);
   ctx.stroke();
-
-  ctx.fillStyle = colors.inkSoft;
-  ctx.font = '11px "DM Mono", monospace';
-  ctx.fillText("1", cx + radius - 3, cy + 18);
-  ctx.fillText("−1", cx - radius - 10, cy + 18);
-  ctx.fillText("1", cx + 9, cy - radius + 4);
-  ctx.fillText("−1", cx + 9, cy + radius + 4);
 
   ctx.strokeStyle = colors.ink;
   ctx.lineWidth = 2;
@@ -273,13 +295,10 @@ function drawCircle() {
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = colors.ink;
-  ctx.font = '600 12px "DM Mono", monospace';
-  const coord = `(${formatDecimal(Math.cos(theta))}, ${formatDecimal(Math.sin(theta))})`;
-  const coordWidth = ctx.measureText(coord).width;
-  const labelX = x > cx ? Math.min(x + 15, width - coordWidth - 10) : Math.max(x - coordWidth - 15, 10);
-  const labelY = y < cy ? Math.max(y - 14, 18) : Math.min(y + 24, height - 8);
-  ctx.fillText(coord, labelX, labelY);
+  const coordinateX = x > cx ? Math.min(x + 14, width - 118) : Math.max(x - 118, 8);
+  const coordinateY = y < cy ? Math.max(y - 25, 8) : Math.min(y + 14, height - 28);
+  elements.circleCoordinate.style.left = `${coordinateX}px`;
+  elements.circleCoordinate.style.top = `${coordinateY}px`;
 
   circleCanvas._geometry = { cx, cy, radius };
 }
@@ -298,8 +317,6 @@ function drawGraph() {
   const midY = plot.top + plot.height / 2;
 
   ctx.clearRect(0, 0, width, height);
-  ctx.font = '10px "DM Mono", monospace';
-  ctx.fillStyle = colors.inkSoft;
   ctx.strokeStyle = colors.grid;
   ctx.lineWidth = 1;
 
@@ -309,19 +326,14 @@ function drawGraph() {
     ctx.moveTo(plot.left, y);
     ctx.lineTo(plot.left + plot.width, y);
     ctx.stroke();
-    if (i !== 0) ctx.fillText(String(i), 24, y + 3);
   }
 
-  const xLabels = ["0", "π/2", "π", "3π/2", "2π"];
   for (let i = 0; i <= 4; i++) {
     const x = plot.left + (i / 4) * plot.width;
     ctx.beginPath();
     ctx.moveTo(x, plot.top);
     ctx.lineTo(x, plot.top + plot.height);
     ctx.stroke();
-    const label = xLabels[i];
-    const measured = ctx.measureText(label).width;
-    ctx.fillText(label, x - measured / 2, height - 14);
   }
 
   ctx.strokeStyle = colors.ink;
@@ -418,21 +430,31 @@ function updateReadout() {
   const isTanUndefined = Math.abs(cosine) < 0.0005;
 
   if (unitMode === "degrees") {
-    elements.angleValue.textContent = `${Math.round(deg * 10) / 10}°`;
-    elements.angleSecondary.textContent = `${piFraction(angle)} rad`;
-    elements.sliderValue.textContent = `${Math.round(deg)}°`;
+    renderMath(elements.angleValue, `${Math.round(deg * 10) / 10}^{\\circ}`);
+    renderMath(elements.angleSecondary, `${piFraction(angle)}\\,\\mathrm{rad}`);
+    renderMath(elements.sliderValue, `${Math.round(deg)}^{\\circ}`);
   } else {
-    elements.angleValue.textContent = `${piFraction(angle)} rad`;
-    elements.angleSecondary.textContent = `${Math.round(deg * 10) / 10}°`;
-    elements.sliderValue.textContent = piFraction(angle);
+    renderMath(elements.angleValue, `${piFraction(angle)}\\,\\mathrm{rad}`);
+    renderMath(elements.angleSecondary, `${Math.round(deg * 10) / 10}^{\\circ}`);
+    renderMath(elements.sliderValue, piFraction(angle));
   }
 
-  elements.sineValue.textContent = exact?.[0] ?? formatDecimal(sine);
-  elements.cosineValue.textContent = exact?.[1] ?? formatDecimal(cosine);
-  elements.tangentValue.textContent = exact?.[2] ?? (isTanUndefined ? "undefined" : formatDecimal(tangent));
-  elements.sineDecimal.textContent = `≈ ${formatDecimal(sine)}`;
-  elements.cosineDecimal.textContent = `≈ ${formatDecimal(cosine)}`;
-  elements.tangentDecimal.textContent = isTanUndefined ? "cos θ = 0" : `≈ ${formatDecimal(tangent)}`;
+  renderMath(elements.sineValue, exact?.[0] ?? formatDecimal(sine));
+  renderMath(elements.cosineValue, exact?.[1] ?? formatDecimal(cosine));
+  renderMath(
+    elements.tangentValue,
+    exact?.[2] ?? (isTanUndefined ? "\\text{undefined}" : formatDecimal(tangent)),
+  );
+  renderMath(elements.sineDecimal, `\\approx ${formatDecimal(sine)}`);
+  renderMath(elements.cosineDecimal, `\\approx ${formatDecimal(cosine)}`);
+  renderMath(
+    elements.tangentDecimal,
+    isTanUndefined ? "\\cos\\theta=0" : `\\approx ${formatDecimal(tangent)}`,
+  );
+  renderMath(
+    elements.circleCoordinate,
+    `\\left(${formatDecimal(cosine)},\\ ${formatDecimal(sine)}\\right)`,
+  );
 
   let quadrant = "On an axis";
   if (deg > 0 && deg < 90) quadrant = "Quadrant I";
@@ -574,4 +596,5 @@ elements.resetButton.addEventListener("click", () => {
 });
 
 window.addEventListener("resize", render);
+renderStaticMath();
 render();

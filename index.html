@@ -14,6 +14,11 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+      crossorigin="anonymous"
+    />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -60,6 +65,11 @@
                 aria-label="Interactive unit circle. Drag the point to change the angle."
                 tabindex="0"
               ></canvas>
+              <div class="circle-math-label circle-label-positive-x" data-math="1">1</div>
+              <div class="circle-math-label circle-label-negative-x" data-math="-1">−1</div>
+              <div class="circle-math-label circle-label-positive-y" data-math="1">1</div>
+              <div class="circle-math-label circle-label-negative-y" data-math="-1">−1</div>
+              <div class="circle-coordinate" id="circleCoordinate">(0.707, 0.707)</div>
               <div class="drag-hint" aria-hidden="true">
                 <span>↖</span> Drag the point
               </div>
@@ -96,6 +106,13 @@
                 role="img"
                 aria-label="Synchronized graphs of sine, cosine, and tangent."
               ></canvas>
+              <div class="graph-math-label graph-y-positive" data-math="1">1</div>
+              <div class="graph-math-label graph-y-negative" data-math="-1">−1</div>
+              <div class="graph-math-label graph-x-zero" data-math="0">0</div>
+              <div class="graph-math-label graph-x-half-pi" data-math="\frac{\pi}{2}">π/2</div>
+              <div class="graph-math-label graph-x-pi" data-math="\pi">π</div>
+              <div class="graph-math-label graph-x-three-half-pi" data-math="\frac{3\pi}{2}">3π/2</div>
+              <div class="graph-math-label graph-x-two-pi" data-math="2\pi">2π</div>
             </div>
             <div class="graph-legend" aria-hidden="true">
               <span><i class="legend-line angle"></i>current angle</span>
@@ -107,31 +124,31 @@
         <section class="readout-panel" aria-live="polite">
           <div class="angle-readout">
             <span class="readout-label">Angle</span>
-            <strong id="angleValue">45°</strong>
-            <span id="angleSecondary">π/4 rad</span>
+            <strong id="angleValue">\(45^\circ\)</strong>
+            <span id="angleSecondary">\(\frac{\pi}{4}\,\mathrm{rad}\)</span>
           </div>
           <div class="value-readout sine-value">
             <span class="readout-symbol">sin</span>
             <div>
               <span class="readout-label">Vertical height</span>
-              <strong id="sineValue">√2/2</strong>
-              <span id="sineDecimal">≈ 0.707</span>
+              <strong id="sineValue">\(\frac{\sqrt{2}}{2}\)</strong>
+              <span id="sineDecimal">\(\approx 0.707\)</span>
             </div>
           </div>
           <div class="value-readout cosine-value">
             <span class="readout-symbol">cos</span>
             <div>
               <span class="readout-label">Horizontal distance</span>
-              <strong id="cosineValue">√2/2</strong>
-              <span id="cosineDecimal">≈ 0.707</span>
+              <strong id="cosineValue">\(\frac{\sqrt{2}}{2}\)</strong>
+              <span id="cosineDecimal">\(\approx 0.707\)</span>
             </div>
           </div>
           <div class="value-readout tangent-value">
             <span class="readout-symbol">tan</span>
             <div>
               <span class="readout-label">Slope</span>
-              <strong id="tangentValue">1</strong>
-              <span id="tangentDecimal">= 1.000</span>
+              <strong id="tangentValue">\(1\)</strong>
+              <span id="tangentDecimal">\(=1.000\)</span>
             </div>
           </div>
         </section>
@@ -145,7 +162,7 @@
           <div class="angle-control">
             <div class="control-labels">
               <label for="angleSlider">Move around the circle</label>
-              <span id="sliderValue">45°</span>
+              <span id="sliderValue">\(45^\circ\)</span>
             </div>
             <input
               id="angleSlider"
@@ -156,9 +173,9 @@
               aria-label="Angle"
             />
             <div class="range-labels" aria-hidden="true">
-              <span>0</span>
-              <span>π</span>
-              <span>2π</span>
+              <span data-math="0">0</span>
+              <span data-math="\pi">π</span>
+              <span data-math="2\pi">2π</span>
             </div>
           </div>
 
@@ -196,6 +213,11 @@
       </footer>
     </div>
 
-    <script src="app.js"></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script defer src="app.js"></script>
   </body>
 </html>
