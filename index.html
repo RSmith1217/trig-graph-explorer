@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Explore how movement around the unit circle creates sine, cosine, and tangent graphs."
+    />
+    <title>Trig Graph Explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="site-header">
+        <a class="brand" href="#" aria-label="Trig Graph Explorer home">
+          <span class="brand-mark" aria-hidden="true">
+            <span></span>
+          </span>
+          <span>Trig Graph Explorer</span>
+        </a>
+        <div class="mode-switch" aria-label="Explorer modes">
+          <button class="mode-button active" type="button">Explore</button>
+          <button class="mode-button" type="button" disabled title="Coming soon">Transform</button>
+          <button class="mode-button" type="button" disabled title="Coming soon">Challenges</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div>
+            <p class="eyebrow">The circle becomes a wave</p>
+            <h1>See trigonometry<br />come alive.</h1>
+          </div>
+          <p class="intro">
+            Drag the point around the unit circle and watch its coordinates trace
+            the sine, cosine, and tangent graphs.
+          </p>
+        </section>
+
+        <section class="explorer-grid" aria-label="Interactive trigonometry explorer">
+          <article class="panel circle-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="panel-kicker">Circular motion</p>
+                <h2>Unit circle</h2>
+              </div>
+              <div class="quadrant-badge" id="quadrantBadge">Quadrant I</div>
+            </div>
+            <div class="canvas-wrap circle-wrap">
+              <canvas
+                id="circleCanvas"
+                role="img"
+                aria-label="Interactive unit circle. Drag the point to change the angle."
+                tabindex="0"
+              ></canvas>
+              <div class="drag-hint" aria-hidden="true">
+                <span>↖</span> Drag the point
+              </div>
+            </div>
+          </article>
+
+          <article class="panel graph-panel">
+            <div class="panel-heading graph-heading">
+              <div>
+                <p class="panel-kicker">Linear motion</p>
+                <h2>Live graph</h2>
+              </div>
+              <div class="function-toggles" aria-label="Visible functions">
+                <label class="function-toggle sine">
+                  <input type="checkbox" id="showSine" checked />
+                  <span class="swatch"></span>
+                  sin
+                </label>
+                <label class="function-toggle cosine">
+                  <input type="checkbox" id="showCosine" checked />
+                  <span class="swatch"></span>
+                  cos
+                </label>
+                <label class="function-toggle tangent">
+                  <input type="checkbox" id="showTangent" />
+                  <span class="swatch"></span>
+                  tan
+                </label>
+              </div>
+            </div>
+            <div class="canvas-wrap graph-wrap">
+              <canvas
+                id="graphCanvas"
+                role="img"
+                aria-label="Synchronized graphs of sine, cosine, and tangent."
+              ></canvas>
+            </div>
+            <div class="graph-legend" aria-hidden="true">
+              <span><i class="legend-line angle"></i>current angle</span>
+              <span><i class="legend-dot"></i>live value</span>
+            </div>
+          </article>
+        </section>
+
+        <section class="readout-panel" aria-live="polite">
+          <div class="angle-readout">
+            <span class="readout-label">Angle</span>
+            <strong id="angleValue">45°</strong>
+            <span id="angleSecondary">π/4 rad</span>
+          </div>
+          <div class="value-readout sine-value">
+            <span class="readout-symbol">sin</span>
+            <div>
+              <span class="readout-label">Vertical height</span>
+              <strong id="sineValue">√2/2</strong>
+              <span id="sineDecimal">≈ 0.707</span>
+            </div>
+          </div>
+          <div class="value-readout cosine-value">
+            <span class="readout-symbol">cos</span>
+            <div>
+              <span class="readout-label">Horizontal distance</span>
+              <strong id="cosineValue">√2/2</strong>
+              <span id="cosineDecimal">≈ 0.707</span>
+            </div>
+          </div>
+          <div class="value-readout tangent-value">
+            <span class="readout-symbol">tan</span>
+            <div>
+              <span class="readout-label">Slope</span>
+              <strong id="tangentValue">1</strong>
+              <span id="tangentDecimal">= 1.000</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="control-panel">
+          <button class="play-button" id="playButton" type="button" aria-label="Play animation">
+            <span id="playIcon" aria-hidden="true">▶</span>
+            <span id="playLabel">Play</span>
+          </button>
+
+          <div class="angle-control">
+            <div class="control-labels">
+              <label for="angleSlider">Move around the circle</label>
+              <span id="sliderValue">45°</span>
+            </div>
+            <input
+              id="angleSlider"
+              type="range"
+              min="0"
+              max="720"
+              value="90"
+              aria-label="Angle"
+            />
+            <div class="range-labels" aria-hidden="true">
+              <span>0</span>
+              <span>π</span>
+              <span>2π</span>
+            </div>
+          </div>
+
+          <div class="control-options">
+            <div class="segmented-control" aria-label="Angle units">
+              <button id="degreeButton" class="active" type="button">Degrees</button>
+              <button id="radianButton" type="button">Radians</button>
+            </div>
+            <label class="snap-toggle">
+              <input type="checkbox" id="snapAngles" checked />
+              <span class="toggle-track"><span></span></span>
+              Snap to key angles
+            </label>
+            <button class="reset-button" id="resetButton" type="button" aria-label="Reset explorer">
+              ↺ <span>Reset</span>
+            </button>
+          </div>
+        </section>
+
+        <aside class="insight-card">
+          <div class="insight-icon" aria-hidden="true">✦</div>
+          <div>
+            <p class="panel-kicker">Notice this</p>
+            <p id="insightText">
+              The point’s vertical height is <strong>sin θ</strong>. As the point
+              moves around the circle, that height becomes the sine wave.
+            </p>
+          </div>
+        </aside>
+      </main>
+
+      <footer>
+        <p>Built for curious minds.</p>
+        <p>Use <kbd>←</kbd> <kbd>→</kbd> to explore one degree at a time.</p>
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
