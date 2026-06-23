@@ -137,6 +137,10 @@ button {
   cursor: default;
 }
 
+.hidden {
+  display: none !important;
+}
+
 main {
   padding: 56px 0 32px;
 }
@@ -754,6 +758,240 @@ input[type="range"]::-moz-range-thumb {
   color: var(--ink);
 }
 
+.transform-hero {
+  margin-bottom: 28px;
+}
+
+.transform-hero .intro .katex {
+  font-size: 1em;
+}
+
+.transform-lab {
+  display: grid;
+  grid-template-columns: minmax(270px, 0.72fr) minmax(620px, 1.55fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.stacked-heading {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.analysis-panel,
+.tangent-panel {
+  overflow: hidden;
+}
+
+.family-toggle {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(247, 242, 232, 0.68);
+}
+
+.family-toggle button {
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: "DM Mono", monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 9px 12px;
+}
+
+.family-toggle button.active {
+  color: var(--paper);
+}
+
+.family-toggle .sine-tab.active {
+  background: var(--sine);
+}
+
+.family-toggle .cosine-tab.active {
+  background: var(--cosine);
+}
+
+.analysis-list {
+  display: grid;
+  border-top: 1px solid var(--grid);
+}
+
+.analysis-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--grid);
+}
+
+.analysis-row span {
+  color: var(--ink-soft);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.analysis-row strong {
+  min-height: 1.5em;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.analysis-row .katex {
+  font-size: 1em;
+}
+
+.metric-note {
+  padding: 8px 11px;
+  border-radius: 999px;
+  color: #7d5720;
+  background: #fff2cb;
+  font-family: "DM Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.transform-wrap {
+  height: 420px;
+  border-top: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+}
+
+.transform-y-top,
+.transform-y-mid,
+.transform-y-bottom {
+  left: 17px;
+  transform: translateY(-50%);
+}
+
+.transform-y-top {
+  top: 20%;
+}
+
+.transform-y-mid {
+  top: 50%;
+}
+
+.transform-y-bottom {
+  top: 80%;
+}
+
+.transform-x-left,
+.transform-x-center,
+.transform-x-right {
+  bottom: 10px;
+}
+
+.transform-x-left {
+  left: 55px;
+}
+
+.transform-x-center {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.transform-x-right {
+  right: 20px;
+}
+
+.parameter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 16px;
+  padding: 22px 24px 24px;
+}
+
+.parameter-control {
+  display: grid;
+  grid-template-columns: 1fr 86px;
+  gap: 10px 14px;
+  align-items: center;
+  color: var(--ink-soft);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.parameter-control > span {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--ink);
+}
+
+.parameter-control i {
+  display: inline-grid;
+  min-width: 23px;
+  height: 23px;
+  place-items: center;
+  border-radius: 7px;
+  color: var(--paper);
+  background: var(--ink);
+  font-style: normal;
+}
+
+.parameter-control i .katex {
+  color: inherit;
+  font-size: 0.95em;
+}
+
+.parameter-control input[type="number"] {
+  width: 86px;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: "DM Mono", monospace;
+  font-size: 0.78rem;
+  padding: 8px 9px;
+}
+
+.tangent-panel {
+  grid-column: 1 / -1;
+  padding-bottom: 20px;
+}
+
+.tangent-panel p {
+  margin: 0;
+  padding: 0 20px 16px;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.tangent-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  padding: 0 20px;
+}
+
+.tangent-metrics span {
+  display: block;
+  padding: 11px 12px;
+  border-radius: 12px;
+  color: var(--tangent);
+  background: var(--tangent-soft);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.tangent-metrics .katex {
+  font-size: 1em;
+}
+
 footer {
   display: flex;
   justify-content: space-between;
@@ -781,6 +1019,18 @@ kbd {
     grid-template-columns: 1fr;
   }
 
+  .transform-lab {
+    grid-template-columns: 1fr;
+  }
+
+  .tangent-panel {
+    grid-column: auto;
+  }
+
+  .tangent-metrics {
+    grid-template-columns: 1fr;
+  }
+
   .circle-wrap {
     height: 420px;
   }
@@ -805,6 +1055,10 @@ kbd {
     grid-column: 1 / -1;
     justify-content: center;
   }
+
+  .analysis-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 700px) {
@@ -813,7 +1067,10 @@ kbd {
   }
 
   .site-header {
-    height: 72px;
+    height: auto;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 18px 0;
   }
 
   .brand {
@@ -834,7 +1091,9 @@ kbd {
   }
 
   .mode-switch {
-    display: none;
+    width: 100%;
+    justify-content: center;
+    overflow-x: auto;
   }
 
   main {
@@ -903,6 +1162,15 @@ kbd {
   .control-options {
     grid-column: auto;
     flex-wrap: wrap;
+  }
+
+  .transform-wrap {
+    height: 340px;
+  }
+
+  .parameter-grid,
+  .analysis-list {
+    grid-template-columns: 1fr;
   }
 
   footer {

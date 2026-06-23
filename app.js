@@ -1,7 +1,9 @@
 const circleCanvas = document.querySelector("#circleCanvas");
 const graphCanvas = document.querySelector("#graphCanvas");
+const transformCanvas = document.querySelector("#transformCanvas");
 const circleCtx = circleCanvas.getContext("2d");
 const graphCtx = graphCanvas.getContext("2d");
+const transformCtx = transformCanvas.getContext("2d");
 
 const elements = {
   angleValue: document.querySelector("#angleValue"),
@@ -27,6 +29,29 @@ const elements = {
   showCosine: document.querySelector("#showCosine"),
   showTangent: document.querySelector("#showTangent"),
   insightText: document.querySelector("#insightText"),
+  modeButtons: document.querySelectorAll("[data-mode-button]"),
+  appViews: document.querySelectorAll("[data-view]"),
+  transformEquation: document.querySelector("#transformEquation"),
+  transformFamilyButtons: document.querySelectorAll("[data-transform-family]"),
+  paramA: document.querySelector("#paramA"),
+  paramB: document.querySelector("#paramB"),
+  paramC: document.querySelector("#paramC"),
+  paramD: document.querySelector("#paramD"),
+  paramANumber: document.querySelector("#paramANumber"),
+  paramBNumber: document.querySelector("#paramBNumber"),
+  paramCNumber: document.querySelector("#paramCNumber"),
+  paramDNumber: document.querySelector("#paramDNumber"),
+  analysisAmplitude: document.querySelector("#analysisAmplitude"),
+  analysisPeriod: document.querySelector("#analysisPeriod"),
+  analysisIncrement: document.querySelector("#analysisIncrement"),
+  analysisHorizontalShift: document.querySelector("#analysisHorizontalShift"),
+  analysisVerticalShift: document.querySelector("#analysisVerticalShift"),
+  analysisMidline: document.querySelector("#analysisMidline"),
+  analysisDomain: document.querySelector("#analysisDomain"),
+  analysisRange: document.querySelector("#analysisRange"),
+  transformTopLabel: document.querySelector("#transformTopLabel"),
+  transformMidLabel: document.querySelector("#transformMidLabel"),
+  transformBottomLabel: document.querySelector("#transformBottomLabel"),
 };
 
 const colors = {
@@ -45,6 +70,9 @@ let unitMode = "degrees";
 let playing = false;
 let dragging = false;
 let lastFrame = 0;
+let activeView = "explore";
+let transformFamily = "sin";
+const transformEpsilon = 0.01;
 
 const specialAngles = [
   0,
@@ -168,6 +196,55 @@ function exactForAngle() {
 
 function formatDecimal(value) {
   return Math.abs(value) < 0.0005 ? "0.000" : value.toFixed(3);
+}
+
+function formatCompactNumber(value) {
+  if (!Number.isFinite(value)) return "\\text{undefined}";
+  if (Math.abs(value) < 0.0005) return "0";
+  if (Math.abs(value - Math.round(value)) < 0.0005) return `${Math.round(value)}`;
+  return `${Number(value.toFixed(3))}`;
+}
+
+function formatPiMultiple(value) {
+  if (Math.abs(value) < transformEpsilon) return "0";
+  const twelfths = Math.round((value / Math.PI) * 12);
+  if (Math.abs(value - (twelfths * Math.PI) / 12) > 0.012) return formatCompactNumber(value);
+
+  const sign = twelfths < 0 ? "-" : "";
+  const count = Math.abs(twelfths);
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+  const divisor = gcd(count, 12);
+  const numerator = count / divisor;
+  const denominator = 12 / divisor;
+
+  if (denominator === 1) return `${sign}${numerator === 1 ? "\\pi" : `${numerator}\\pi`}`;
+  return numerator === 1
+    ? `${sign}\\frac{\\pi}{${denominator}}`
+    : `${sign}\\frac{${numerator}\\pi}{${denominator}}`;
+}
+
+function signedLatex(value, formatter = formatCompactNumber) {
+  const absolute = Math.abs(value);
+  return value < -0.0005 ? `-${formatter(absolute)}` : formatter(absolute);
+}
+
+function plusMinusLatex(value, formatter = formatCompactNumber) {
+  if (Math.abs(value) < 0.0005) return "";
+  return value > 0 ? `+${formatter(value)}` : `-${formatter(Math.abs(value))}`;
+}
+
+function transformParameters() {
+  return {
+    A: Number(elements.paramA.value),
+    B: Number(elements.paramB.value),
+    C: Number(elements.paramC.value),
+    D: Number(elements.paramD.value),
+  };
+}
+
+function transformValue(x, { A, B, C, D }) {
+  const input = B * (x - C);
+  return A * (transformFamily === "sin" ? Math.sin(input) : Math.cos(input)) + D;
 }
 
 function drawCircle() {
@@ -421,6 +498,135 @@ function drawGraph() {
   graphCanvas._geometry = plot;
 }
 
+function drawTransformGraph() {
+  if (activeView !== "transform") return;
+
+  const { width, height } = setupCanvas(transformCanvas, transformCtx);
+  if (!width || !height) return;
+
+  const ctx = transformCtx;
+  const params = transformParameters();
+  const { A, B, C, D } = params;
+  const xMin = -2 * Math.PI;
+  const xMax = 2 * Math.PI;
+  const amplitude = Math.abs(A);
+  const sampleCount = 420;
+  const values = [];
+
+  for (let i = 0; i <= sampleCount; i++) {
+    const x = xMin + (i / sampleCount) * (xMax - xMin);
+    values.push(transformValue(x, params));
+  }
+
+  const naturalMin = Math.abs(B) < transformEpsilon ? Math.min(...values, D, 0) : D - amplitude;
+  const naturalMax = Math.abs(B) < transformEpsilon ? Math.max(...values, D, 0) : D + amplitude;
+  const span = Math.max(2, naturalMax - naturalMin);
+  const yMin = naturalMin - span * 0.25;
+  const yMax = naturalMax + span * 0.25;
+  const plot = { left: 56, top: 25, width: width - 82, height: height - 62 };
+
+  const pointFor = (x, y) => ({
+    x: plot.left + ((x - xMin) / (xMax - xMin)) * plot.width,
+    y: plot.top + ((yMax - y) / (yMax - yMin)) * plot.height,
+  });
+
+  ctx.clearRect(0, 0, width, height);
+
+  ctx.strokeStyle = colors.grid;
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 8; i++) {
+    const x = plot.left + (i / 8) * plot.width;
+    ctx.beginPath();
+    ctx.moveTo(x, plot.top);
+    ctx.lineTo(x, plot.top + plot.height);
+    ctx.stroke();
+  }
+  for (let i = 0; i <= 4; i++) {
+    const y = plot.top + (i / 4) * plot.height;
+    ctx.beginPath();
+    ctx.moveTo(plot.left, y);
+    ctx.lineTo(plot.left + plot.width, y);
+    ctx.stroke();
+  }
+
+  const xAxis = pointFor(0, 0).y;
+  if (xAxis >= plot.top && xAxis <= plot.top + plot.height) {
+    ctx.strokeStyle = colors.ink;
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(plot.left, xAxis);
+    ctx.lineTo(plot.left + plot.width, xAxis);
+    ctx.stroke();
+  }
+
+  const yAxis = pointFor(0, 0).x;
+  ctx.strokeStyle = colors.ink;
+  ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  ctx.moveTo(yAxis, plot.top);
+  ctx.lineTo(yAxis, plot.top + plot.height);
+  ctx.stroke();
+
+  const midline = pointFor(0, D).y;
+  ctx.strokeStyle = "rgba(227, 173, 62, 0.8)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([7, 6]);
+  ctx.beginPath();
+  ctx.moveTo(plot.left, midline);
+  ctx.lineTo(plot.left + plot.width, midline);
+  ctx.stroke();
+
+  if (C >= xMin && C <= xMax) {
+    const shiftX = pointFor(C, 0).x;
+    ctx.strokeStyle = "rgba(24, 52, 46, 0.35)";
+    ctx.beginPath();
+    ctx.moveTo(shiftX, plot.top);
+    ctx.lineTo(shiftX, plot.top + plot.height);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle = transformFamily === "sin" ? colors.sine : colors.cosine;
+  ctx.lineWidth = 3.4;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  values.forEach((y, i) => {
+    const x = xMin + (i / sampleCount) * (xMax - xMin);
+    const p = pointFor(x, y);
+    if (i === 0) ctx.moveTo(p.x, p.y);
+    else ctx.lineTo(p.x, p.y);
+  });
+  ctx.stroke();
+
+  if (Math.abs(B) >= transformEpsilon) {
+    const startX = C;
+    const period = (2 * Math.PI) / Math.abs(B);
+    const endX = C + period * Math.sign(B || 1);
+    if (startX >= xMin && startX <= xMax && endX >= xMin && endX <= xMax) {
+      const y = Math.min(plot.top + plot.height - 16, Math.max(plot.top + 16, midline + 26));
+      const start = pointFor(startX, D).x;
+      const end = pointFor(endX, D).x;
+      ctx.strokeStyle = "rgba(24, 52, 46, 0.5)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(start, y);
+      ctx.lineTo(end, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(start, y - 5);
+      ctx.lineTo(start, y + 5);
+      ctx.moveTo(end, y - 5);
+      ctx.lineTo(end, y + 5);
+      ctx.stroke();
+    }
+  }
+
+  renderMath(elements.transformTopLabel, formatCompactNumber(naturalMax));
+  renderMath(elements.transformMidLabel, formatCompactNumber(D));
+  renderMath(elements.transformBottomLabel, formatCompactNumber(naturalMin));
+}
+
 function updateReadout() {
   const deg = degrees();
   const exact = exactForAngle();
@@ -482,10 +688,75 @@ function updateReadout() {
   }
 }
 
+function updateTransformReadout() {
+  const { A, B, C, D } = transformParameters();
+  const family = transformFamily === "sin" ? "\\sin" : "\\cos";
+  const dTerm = plusMinusLatex(D);
+  const amplitude = Math.abs(A);
+  const constantValue = transformFamily === "sin" ? D : A + D;
+  const period = Math.abs(B) < transformEpsilon ? null : (2 * Math.PI) / Math.abs(B);
+  const increment = period === null ? null : period / 4;
+  const rangeLow = Math.abs(B) < transformEpsilon ? constantValue : D - amplitude;
+  const rangeHigh = Math.abs(B) < transformEpsilon ? constantValue : D + amplitude;
+  const shiftTerm =
+    C < -transformEpsilon
+      ? `+${formatPiMultiple(Math.abs(C))}`
+      : C > transformEpsilon
+        ? `-${formatPiMultiple(C)}`
+        : "";
+
+  renderMath(
+    elements.transformEquation,
+    `y=${formatCompactNumber(A)}${family}\\left(${formatCompactNumber(B)}\\left(x${shiftTerm}\\right)\\right)${dTerm}`,
+  );
+  renderMath(elements.analysisAmplitude, formatCompactNumber(amplitude));
+  renderMath(elements.analysisPeriod, period === null ? "\\text{undefined}" : formatPiMultiple(period));
+  renderMath(elements.analysisIncrement, increment === null ? "\\text{undefined}" : formatPiMultiple(increment));
+  renderMath(
+    elements.analysisHorizontalShift,
+    C > transformEpsilon
+      ? `${formatPiMultiple(C)}\\text{ right}`
+      : C < -transformEpsilon
+        ? `${formatPiMultiple(Math.abs(C))}\\text{ left}`
+        : "0",
+  );
+  renderMath(
+    elements.analysisVerticalShift,
+    D > 0.0005
+      ? `${formatCompactNumber(D)}\\text{ up}`
+      : D < -0.0005
+        ? `${formatCompactNumber(Math.abs(D))}\\text{ down}`
+        : "0",
+  );
+  renderMath(elements.analysisMidline, `y=${formatCompactNumber(D)}`);
+  renderMath(elements.analysisDomain, "(-\\infty,\\infty)");
+  renderMath(
+    elements.analysisRange,
+    `\\left[${formatCompactNumber(rangeLow)},${formatCompactNumber(rangeHigh)}\\right]`,
+  );
+}
+
 function render() {
   drawCircle();
   drawGraph();
   updateReadout();
+}
+
+function renderTransform() {
+  updateTransformReadout();
+  drawTransformGraph();
+}
+
+function setActiveView(view) {
+  activeView = view;
+  elements.modeButtons.forEach((button) => {
+    button.classList.toggle("active", button.dataset.modeButton === view);
+  });
+  elements.appViews.forEach((section) => {
+    section.classList.toggle("hidden", section.dataset.view !== view);
+  });
+  if (view === "transform") renderTransform();
+  else render();
 }
 
 function setAngle(value, shouldSnap = true) {
@@ -595,6 +866,41 @@ elements.resetButton.addEventListener("click", () => {
   input.addEventListener("change", render);
 });
 
-window.addEventListener("resize", render);
+elements.modeButtons.forEach((button) => {
+  button.addEventListener("click", () => setActiveView(button.dataset.modeButton));
+});
+
+elements.transformFamilyButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    transformFamily = button.dataset.transformFamily;
+    elements.transformFamilyButtons.forEach((familyButton) => {
+      familyButton.classList.toggle("active", familyButton === button);
+    });
+    renderTransform();
+  });
+});
+
+const parameterPairs = [
+  [elements.paramA, elements.paramANumber],
+  [elements.paramB, elements.paramBNumber],
+  [elements.paramC, elements.paramCNumber],
+  [elements.paramD, elements.paramDNumber],
+];
+
+function syncParameter(source, target) {
+  target.value = source.value;
+  renderTransform();
+}
+
+parameterPairs.forEach(([slider, number]) => {
+  slider.addEventListener("input", () => syncParameter(slider, number));
+  number.addEventListener("input", () => syncParameter(number, slider));
+});
+
+window.addEventListener("resize", () => {
+  render();
+  renderTransform();
+});
 renderStaticMath();
 render();
+renderTransform();

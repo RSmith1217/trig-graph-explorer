@@ -31,14 +31,14 @@
           <span>Trig Graph Explorer</span>
         </a>
         <div class="mode-switch" aria-label="Explorer modes">
-          <button class="mode-button active" type="button">Explore</button>
-          <button class="mode-button" type="button" disabled title="Coming soon">Transform</button>
+          <button class="mode-button active" type="button" data-mode-button="explore">Explore</button>
+          <button class="mode-button" type="button" data-mode-button="transform">Transform</button>
           <button class="mode-button" type="button" disabled title="Coming soon">Challenges</button>
         </div>
       </header>
 
       <main>
-        <section class="hero">
+        <section class="hero app-view" data-view="explore">
           <div>
             <p class="eyebrow">The circle becomes a wave</p>
             <h1>See trigonometry<br />come alive.</h1>
@@ -49,7 +49,7 @@
           </p>
         </section>
 
-        <section class="explorer-grid" aria-label="Interactive trigonometry explorer">
+        <section class="explorer-grid app-view" data-view="explore" aria-label="Interactive trigonometry explorer">
           <article class="panel circle-panel">
             <div class="panel-heading">
               <div>
@@ -121,7 +121,7 @@
           </article>
         </section>
 
-        <section class="readout-panel" aria-live="polite">
+        <section class="readout-panel app-view" data-view="explore" aria-live="polite">
           <div class="angle-readout">
             <span class="readout-label">Angle</span>
             <strong id="angleValue">\(45^\circ\)</strong>
@@ -153,7 +153,7 @@
           </div>
         </section>
 
-        <section class="control-panel">
+        <section class="control-panel app-view" data-view="explore">
           <button class="play-button" id="playButton" type="button" aria-label="Play animation">
             <span id="playIcon" aria-hidden="true">▶</span>
             <span id="playLabel">Play</span>
@@ -195,7 +195,7 @@
           </div>
         </section>
 
-        <aside class="insight-card">
+        <aside class="insight-card app-view" data-view="explore">
           <div class="insight-icon" aria-hidden="true">✦</div>
           <div>
             <p class="panel-kicker">Notice this</p>
@@ -205,6 +205,131 @@
             </p>
           </div>
         </aside>
+
+        <section class="hero transform-hero app-view hidden" data-view="transform">
+          <div>
+            <p class="eyebrow">Transformations lab</p>
+            <h1>Build the wave<br />from its equation.</h1>
+          </div>
+          <p class="intro">
+            Tune the parameters in <span data-math="y=A\sin(B(x-C))+D">y = A sin(B(x-C)) + D</span>
+            or switch to cosine. The graph and analysis update together.
+          </p>
+        </section>
+
+        <section class="transform-lab app-view hidden" data-view="transform" aria-label="Trig transformation lab">
+          <aside class="panel analysis-panel">
+            <div class="panel-heading stacked-heading">
+              <div>
+                <p class="panel-kicker">Dynamic analysis</p>
+                <h2>Sin & cos metrics</h2>
+              </div>
+              <div class="family-toggle" aria-label="Choose sine or cosine">
+                <button class="active sine-tab" type="button" data-transform-family="sin">sin</button>
+                <button class="cosine-tab" type="button" data-transform-family="cos">cos</button>
+              </div>
+            </div>
+            <div class="analysis-list" aria-live="polite">
+              <div class="analysis-row">
+                <span>Amplitude</span>
+                <strong id="analysisAmplitude">\(1\)</strong>
+              </div>
+              <div class="analysis-row">
+                <span>Period</span>
+                <strong id="analysisPeriod">\(2\pi\)</strong>
+              </div>
+              <div class="analysis-row">
+                <span>Increment</span>
+                <strong id="analysisIncrement">\(\frac{\pi}{2}\)</strong>
+              </div>
+              <div class="analysis-row">
+                <span>Horizontal shift</span>
+                <strong id="analysisHorizontalShift">\(0\)</strong>
+              </div>
+              <div class="analysis-row">
+                <span>Vertical shift</span>
+                <strong id="analysisVerticalShift">\(0\)</strong>
+              </div>
+              <div class="analysis-row">
+                <span>Equation of midline</span>
+                <strong id="analysisMidline">\(y=0\)</strong>
+              </div>
+              <div class="analysis-row">
+                <span>Domain</span>
+                <strong id="analysisDomain">\((-\infty,\infty)\)</strong>
+              </div>
+              <div class="analysis-row">
+                <span>Range</span>
+                <strong id="analysisRange">\([-1,1]\)</strong>
+              </div>
+            </div>
+          </aside>
+
+          <article class="panel transform-panel">
+            <div class="panel-heading graph-heading">
+              <div>
+                <p class="panel-kicker">Equation builder</p>
+                <h2 id="transformEquation">\(y=\sin(x)\)</h2>
+              </div>
+              <div class="metric-note">Sin/cos analysis</div>
+            </div>
+
+            <div class="canvas-wrap transform-wrap">
+              <canvas
+                id="transformCanvas"
+                role="img"
+                aria-label="Graph of the transformed sine or cosine function."
+              ></canvas>
+              <div class="graph-math-label transform-y-top" id="transformTopLabel">\(1\)</div>
+              <div class="graph-math-label transform-y-mid" id="transformMidLabel">\(0\)</div>
+              <div class="graph-math-label transform-y-bottom" id="transformBottomLabel">\(-1\)</div>
+              <div class="graph-math-label transform-x-left" data-math="-2\pi">−2π</div>
+              <div class="graph-math-label transform-x-center" data-math="0">0</div>
+              <div class="graph-math-label transform-x-right" data-math="2\pi">2π</div>
+            </div>
+
+            <div class="parameter-grid">
+              <label class="parameter-control">
+                <span><i data-math="A">A</i> Amplitude scale</span>
+                <input id="paramA" type="range" min="-4" max="4" step="0.25" value="1" />
+                <input id="paramANumber" type="number" min="-8" max="8" step="0.25" value="1" aria-label="A value" />
+              </label>
+              <label class="parameter-control">
+                <span><i data-math="B">B</i> Period factor</span>
+                <input id="paramB" type="range" min="-4" max="4" step="0.25" value="1" />
+                <input id="paramBNumber" type="number" min="-8" max="8" step="0.25" value="1" aria-label="B value" />
+              </label>
+              <label class="parameter-control">
+                <span><i data-math="C">C</i> Horizontal shift</span>
+                <input id="paramC" type="range" min="-6.283185312" max="6.283185312" step="0.261799388" value="0" />
+                <input id="paramCNumber" type="number" min="-12.566370624" max="12.566370624" step="0.261799388" value="0" aria-label="C value" />
+              </label>
+              <label class="parameter-control">
+                <span><i data-math="D">D</i> Vertical shift</span>
+                <input id="paramD" type="range" min="-4" max="4" step="0.25" value="0" />
+                <input id="paramDNumber" type="number" min="-8" max="8" step="0.25" value="0" aria-label="D value" />
+              </label>
+            </div>
+          </article>
+
+          <aside class="panel tangent-panel">
+            <div class="panel-heading stacked-heading">
+              <div>
+                <p class="panel-kicker">Separated intentionally</p>
+                <h2>Tangent metrics</h2>
+              </div>
+            </div>
+            <p>
+              Tangent needs a different analysis set: no amplitude, no bounded range,
+              and vertical asymptotes instead of max/min values.
+            </p>
+            <div class="tangent-metrics">
+              <span data-math="\text{Period}=\frac{\pi}{|B|}">Period = π / |B|</span>
+              <span data-math="\text{Range}=(-\infty,\infty)">Range = all real numbers</span>
+              <span data-math="\text{Asymptotes: }B(x-C)=\frac{\pi}{2}+k\pi">Asymptotes</span>
+            </div>
+          </aside>
+        </section>
       </main>
 
       <footer>
