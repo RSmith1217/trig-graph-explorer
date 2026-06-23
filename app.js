@@ -1009,20 +1009,39 @@ function cleanParameterValue(value) {
   return `${Number(value.toFixed(6))}`;
 }
 
+function snapParameterValue(value, targetValue) {
+  const tolerance = 0.03;
+  return Math.abs(value - targetValue) <= tolerance ? targetValue : value;
+}
+
+function snappedValueForSlider(slider, value) {
+  if (slider === elements.paramA || slider === elements.paramB) return snapParameterValue(value, 1);
+  if (slider === elements.paramC || slider === elements.paramD) return snapParameterValue(value, 0);
+  return value;
+}
+
 function setParameterPairValue(slider, number, value, shouldCenterOnC = false) {
   const min = Number(number.min);
   const max = Number(number.max);
-  const nextValue = clamp(value, min, max);
+  const nextValue = clamp(snappedValueForSlider(slider, value), min, max);
   number.value = cleanParameterValue(nextValue);
   slider.value = `${clamp(nextValue, Number(slider.min), Number(slider.max))}`;
   if (shouldCenterOnC) transformXCenter = nextValue;
   renderTransform();
 }
 
-function syncParameter(source, target, shouldCenterOnC = false) {
-  target.value = source.value;
+function syncParameter(source, target, slider, shouldCenterOnC = false) {
+  if (source.value === "") {
+    target.value = "";
+    renderTransform();
+    return;
+  }
+  const sourceValue = Number(source.value);
+  const nextValue = Number.isFinite(sourceValue) ? snappedValueForSlider(slider, sourceValue) : source.value;
+  source.value = cleanParameterValue(nextValue);
+  target.value = cleanParameterValue(nextValue);
   if (shouldCenterOnC) {
-    const nextCenter = Number(source.value);
+    const nextCenter = Number(nextValue);
     if (Number.isFinite(nextCenter)) transformXCenter = nextCenter;
   }
   renderTransform();
@@ -1030,8 +1049,8 @@ function syncParameter(source, target, shouldCenterOnC = false) {
 
 parameterPairs.forEach(([slider, number]) => {
   const isCParameter = slider === elements.paramC;
-  slider.addEventListener("input", () => syncParameter(slider, number, isCParameter));
-  number.addEventListener("input", () => syncParameter(number, slider, isCParameter));
+  slider.addEventListener("input", () => syncParameter(slider, number, slider, isCParameter));
+  number.addEventListener("input", () => syncParameter(number, slider, slider, isCParameter));
 });
 
 elements.piStepButtons.forEach((button) => {
