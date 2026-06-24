@@ -13,6 +13,8 @@
   --tangent-soft: #f1eaf6;
   --gold: #e3ad3e;
   --period: #2f6fed;
+  --cta-blue: #1555d8;
+  --cta-line: #bfd1ef;
   --shadow: 0 20px 60px rgba(48, 59, 49, 0.08);
 }
 
@@ -56,6 +58,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 18px;
   border-bottom: 1px solid rgba(24, 52, 46, 0.14);
 }
 
@@ -136,6 +139,41 @@ button {
 .mode-button:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+.site-cta {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 9px;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 22px;
+  border: 2px solid var(--cta-line);
+  border-radius: 999px;
+  color: var(--cta-blue);
+  background: rgba(255, 253, 248, 0.88);
+  box-shadow: 0 8px 22px rgba(21, 85, 216, 0.06);
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.site-cta span {
+  font-size: 1.18em;
+  line-height: 0.8;
+}
+
+.site-cta:hover,
+.site-cta:focus-visible {
+  border-color: rgba(21, 85, 216, 0.45);
+  box-shadow: 0 12px 28px rgba(21, 85, 216, 0.13);
+  transform: translateY(-1px);
 }
 
 .hidden {
@@ -1210,6 +1248,12 @@ kbd {
     width: 100%;
     justify-content: center;
     overflow-x: auto;
+  }
+
+  .site-cta {
+    width: 100%;
+    padding: 12px 18px;
+    font-size: 0.95rem;
   }
 
   main {
