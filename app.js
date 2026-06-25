@@ -44,8 +44,6 @@ const elements = {
   paramBNumber: document.querySelector("#paramBNumber"),
   paramCNumber: document.querySelector("#paramCNumber"),
   paramDNumber: document.querySelector("#paramDNumber"),
-  paramBExact: document.querySelector("#paramBExact"),
-  paramCExact: document.querySelector("#paramCExact"),
   tanParamA: document.querySelector("#tanParamA"),
   tanParamB: document.querySelector("#tanParamB"),
   tanParamC: document.querySelector("#tanParamC"),
@@ -54,8 +52,6 @@ const elements = {
   tanParamBNumber: document.querySelector("#tanParamBNumber"),
   tanParamCNumber: document.querySelector("#tanParamCNumber"),
   tanParamDNumber: document.querySelector("#tanParamDNumber"),
-  tanParamBExact: document.querySelector("#tanParamBExact"),
-  tanParamCExact: document.querySelector("#tanParamCExact"),
   analysisAmplitude: document.querySelector("#analysisAmplitude"),
   analysisPeriod: document.querySelector("#analysisPeriod"),
   analysisIncrement: document.querySelector("#analysisIncrement"),
@@ -1194,8 +1190,6 @@ function updateTransformReadout() {
     elements.analysisRange,
     `\\left[${formatCompactNumber(rangeLow)},${formatCompactNumber(rangeHigh)}\\right]`,
   );
-  renderMath(elements.paramBExact, bTerm);
-  renderMath(elements.paramCExact, formatPiMultiple(C));
 }
 
 function updateTanCotReadout() {
@@ -1216,8 +1210,6 @@ function updateTanCotReadout() {
     elements.tanCotEquation,
     `y=${formatCompactNumber(A)}${family}\\left[${bTerm}\\left(x${shiftTerm}\\right)\\right]${dTerm}`,
   );
-  renderMath(elements.tanParamBExact, bTerm);
-  renderMath(elements.tanParamCExact, formatPiMultiple(C));
   renderMath(elements.tanAnalysisStretch, formatCompactNumber(A));
   renderMath(elements.tanAnalysisPeriod, period === null ? "\\text{undefined}" : formatPiMultiple(period));
   renderMath(elements.tanAnalysisIncrement, increment === null ? "\\text{undefined}" : formatPiMultiple(increment));
