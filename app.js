@@ -1064,7 +1064,9 @@ function drawTanCotGraph() {
   if (Math.abs(B) >= transformEpsilon) {
     const period = Math.PI / Math.abs(B);
     const increment = period / 2;
-    drawCurveSegment(C, C + period, colors.period, 6.4);
+    const selectedPeriodStart = tanCotFamily === "tan" ? C - period / 2 : C;
+    const selectedPeriodEnd = selectedPeriodStart + period;
+    drawCurveSegment(selectedPeriodStart, selectedPeriodEnd, colors.period, 6.4);
 
     const xAxisLabelTop = Math.max(
       plot.top + 8,
@@ -1074,7 +1076,7 @@ function drawTanCotGraph() {
     const labelSpacing = (increment / (xMax - xMin)) * plot.width;
     const labelCount = labelSpacing < 54 ? 1 : 3;
     for (let i = 0; i < labelCount; i++) {
-      const xValue = C + i * increment;
+      const xValue = selectedPeriodStart + i * increment;
       if (xValue < xMin - transformEpsilon || xValue > xMax + transformEpsilon) continue;
       labels.push({ latex: formatPiMultiple(xValue), left: pointFor(xValue, 0).x, top: xAxisLabelTop });
     }
