@@ -11,6 +11,8 @@
   --cosine-soft: #e7f4f1;
   --tangent: #8b65a6;
   --tangent-soft: #f1eaf6;
+  --cotangent: #b8672a;
+  --cotangent-soft: #fff0df;
   --gold: #e3ad3e;
   --period: #2f6fed;
   --cta-blue: #1555d8;
@@ -827,7 +829,7 @@ input[type="range"]::-moz-range-thumb {
 .family-toggle {
   display: grid;
   width: 100%;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
   padding: 5px;
   border: 1px solid var(--line);
@@ -857,6 +859,14 @@ input[type="range"]::-moz-range-thumb {
 
 .family-toggle .cosine-tab.active {
   background: var(--cosine);
+}
+
+.family-toggle .tangent-tab.active {
+  background: var(--tangent);
+}
+
+.family-toggle .cotangent-tab.active {
+  background: var(--cotangent);
 }
 
 .analysis-list {
@@ -1131,7 +1141,7 @@ input[type="range"]::-moz-range-thumb {
 
 .tangent-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 9px;
   padding: 0 20px;
 }

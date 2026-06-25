@@ -221,8 +221,8 @@
             <h1>Build the wave<br />from its equation.</h1>
           </div>
           <p class="intro">
-            Tune the parameters in <span data-math="y=A\sin[B(x-C)]+D">y = A sin[B(x-C)] + D</span>
-            or switch to cosine. The graph and analysis update together.
+            Tune the parameters in <span data-math="y=A f[B(x-C)]+D">y = A f[B(x-C)] + D</span>
+            and switch among sine, cosine, tangent, and cotangent. The graph and analysis update together.
           </p>
         </section>
 
@@ -231,44 +231,46 @@
             <div class="panel-heading stacked-heading">
               <div>
                 <p class="panel-kicker">Dynamic analysis</p>
-                <h2>Sin & cos metrics</h2>
+                <h2 id="analysisTitle">Sin & cos metrics</h2>
               </div>
-              <div class="family-toggle" aria-label="Choose sine or cosine">
+              <div class="family-toggle" aria-label="Choose a trig family">
                 <button class="active sine-tab" type="button" data-transform-family="sin">sin</button>
                 <button class="cosine-tab" type="button" data-transform-family="cos">cos</button>
+                <button class="tangent-tab" type="button" data-transform-family="tan">tan</button>
+                <button class="cotangent-tab" type="button" data-transform-family="cot">cot</button>
               </div>
             </div>
             <div class="analysis-list" aria-live="polite">
               <div class="analysis-row">
-                <span>Amplitude</span>
+                <span id="analysisAmplitudeLabel">Amplitude</span>
                 <strong id="analysisAmplitude">\(1\)</strong>
               </div>
               <div class="analysis-row">
-                <span>Period</span>
+                <span id="analysisPeriodLabel">Period</span>
                 <strong id="analysisPeriod">\(2\pi\)</strong>
               </div>
               <div class="analysis-row">
-                <span>Increment</span>
+                <span id="analysisIncrementLabel">Increment</span>
                 <strong id="analysisIncrement">\(\frac{\pi}{2}\)</strong>
               </div>
               <div class="analysis-row">
-                <span>Horizontal shift</span>
+                <span id="analysisHorizontalShiftLabel">Horizontal shift</span>
                 <strong id="analysisHorizontalShift">\(0\)</strong>
               </div>
               <div class="analysis-row">
-                <span>Vertical shift</span>
+                <span id="analysisVerticalShiftLabel">Vertical shift</span>
                 <strong id="analysisVerticalShift">\(0\)</strong>
               </div>
               <div class="analysis-row">
-                <span>Equation of midline</span>
+                <span id="analysisMidlineLabel">Equation of midline</span>
                 <strong id="analysisMidline">\(y=0\)</strong>
               </div>
               <div class="analysis-row">
-                <span>Domain</span>
+                <span id="analysisDomainLabel">Domain</span>
                 <strong id="analysisDomain">\((-\infty,\infty)\)</strong>
               </div>
               <div class="analysis-row">
-                <span>Range</span>
+                <span id="analysisRangeLabel">Range</span>
                 <strong id="analysisRange">\([-1,1]\)</strong>
               </div>
             </div>
@@ -280,14 +282,14 @@
                 <p class="panel-kicker">Equation builder</p>
                 <h2 id="transformEquation">\(y=\sin(x)\)</h2>
               </div>
-              <div class="metric-note">Sin/cos analysis</div>
+              <div class="metric-note" id="metricNote">Sin/cos analysis</div>
             </div>
 
             <div class="canvas-wrap transform-wrap">
               <canvas
                 id="transformCanvas"
                 role="img"
-                aria-label="Graph of the transformed sine or cosine function."
+                aria-label="Graph of the transformed trigonometric function."
               ></canvas>
               <div class="graph-math-label transform-y-top" id="transformTopLabel">\(1\)</div>
               <div class="graph-math-label transform-y-mid" id="transformMidLabel">\(0\)</div>
@@ -347,17 +349,18 @@
             <div class="panel-heading stacked-heading">
               <div>
                 <p class="panel-kicker">Separated intentionally</p>
-                <h2>Tangent metrics</h2>
+                <h2>Tan & cot notes</h2>
               </div>
             </div>
             <p>
-              Tangent needs a different analysis set: no amplitude, no bounded range,
-              and vertical asymptotes instead of max/min values.
+              Tangent and cotangent use the same transformation controls, but their analysis changes:
+              no amplitude, no bounded range, and vertical asymptotes instead of max/min values.
             </p>
             <div class="tangent-metrics">
               <span data-math="\text{Period}=\frac{\pi}{|B|}">Period = π / |B|</span>
               <span data-math="\text{Range}=(-\infty,\infty)">Range = all real numbers</span>
-              <span data-math="\text{Asymptotes: }B(x-C)=\frac{\pi}{2}+k\pi">Asymptotes</span>
+              <span data-math="\tan:\ B(x-C)=\frac{\pi}{2}+k\pi">tan asymptotes</span>
+              <span data-math="\cot:\ B(x-C)=k\pi">cot asymptotes</span>
             </div>
           </aside>
         </section>

@@ -31,6 +31,8 @@ const elements = {
   insightText: document.querySelector("#insightText"),
   modeButtons: document.querySelectorAll("[data-mode-button]"),
   appViews: document.querySelectorAll("[data-view]"),
+  analysisTitle: document.querySelector("#analysisTitle"),
+  metricNote: document.querySelector("#metricNote"),
   transformEquation: document.querySelector("#transformEquation"),
   transformFamilyButtons: document.querySelectorAll("[data-transform-family]"),
   paramA: document.querySelector("#paramA"),
@@ -43,6 +45,14 @@ const elements = {
   paramDNumber: document.querySelector("#paramDNumber"),
   paramBExact: document.querySelector("#paramBExact"),
   paramCExact: document.querySelector("#paramCExact"),
+  analysisAmplitudeLabel: document.querySelector("#analysisAmplitudeLabel"),
+  analysisPeriodLabel: document.querySelector("#analysisPeriodLabel"),
+  analysisIncrementLabel: document.querySelector("#analysisIncrementLabel"),
+  analysisHorizontalShiftLabel: document.querySelector("#analysisHorizontalShiftLabel"),
+  analysisVerticalShiftLabel: document.querySelector("#analysisVerticalShiftLabel"),
+  analysisMidlineLabel: document.querySelector("#analysisMidlineLabel"),
+  analysisDomainLabel: document.querySelector("#analysisDomainLabel"),
+  analysisRangeLabel: document.querySelector("#analysisRangeLabel"),
   analysisAmplitude: document.querySelector("#analysisAmplitude"),
   analysisPeriod: document.querySelector("#analysisPeriod"),
   analysisIncrement: document.querySelector("#analysisIncrement"),
@@ -69,6 +79,7 @@ const colors = {
   sine: "#ee6b4d",
   cosine: "#277a70",
   tangent: "#8b65a6",
+  cotangent: "#b8672a",
   gold: "#e3ad3e",
   period: "#2f6fed",
 };
@@ -259,9 +270,40 @@ function transformParameters() {
   };
 }
 
+function isSinCosFamily() {
+  return transformFamily === "sin" || transformFamily === "cos";
+}
+
+function isTanCotFamily() {
+  return transformFamily === "tan" || transformFamily === "cot";
+}
+
+function transformFunctionLatex() {
+  return {
+    sin: "\\sin",
+    cos: "\\cos",
+    tan: "\\tan",
+    cot: "\\cot",
+  }[transformFamily];
+}
+
+function transformColor() {
+  return {
+    sin: colors.sine,
+    cos: colors.cosine,
+    tan: colors.tangent,
+    cot: colors.cotangent,
+  }[transformFamily];
+}
+
 function transformValue(x, { A, B, C, D }) {
   const input = B * (x - C);
-  return A * (transformFamily === "sin" ? Math.sin(input) : Math.cos(input)) + D;
+  if (transformFamily === "sin") return A * Math.sin(input) + D;
+  if (transformFamily === "cos") return A * Math.cos(input) + D;
+  if (transformFamily === "tan") return A * Math.tan(input) + D;
+
+  const tangent = Math.tan(input);
+  return A * (Math.abs(tangent) < 0.000001 ? Infinity : 1 / tangent) + D;
 }
 
 function niceGridStep(target) {
@@ -282,6 +324,33 @@ function renderAxisIncrementLabels(labels) {
     elements.transformAxisLabels.append(label);
     renderMath(label, latex);
   });
+}
+
+function tangentAsymptotes({ B, C }, xMin, xMax) {
+  if (Math.abs(B) < transformEpsilon || !isTanCotFamily()) return [];
+
+  const asymptotes = [];
+  const base = transformFamily === "tan" ? Math.PI / 2 : 0;
+  const inputA = B * (xMin - C);
+  const inputB = B * (xMax - C);
+  const inputMin = Math.min(inputA, inputB);
+  const inputMax = Math.max(inputA, inputB);
+  const lowK = Math.ceil((inputMin - base) / Math.PI) - 1;
+  const highK = Math.floor((inputMax - base) / Math.PI) + 1;
+
+  for (let k = lowK; k <= highK; k++) {
+    const x = C + (base + k * Math.PI) / B;
+    if (x >= xMin - transformEpsilon && x <= xMax + transformEpsilon) asymptotes.push(x);
+  }
+
+  return [...new Set(asymptotes.map((x) => Number(x.toFixed(10))))].sort((a, b) => a - b);
+}
+
+function isNearTangentAsymptote(x, params) {
+  if (!isTanCotFamily()) return false;
+  const input = params.B * (x - params.C);
+  const normalized = transformFamily === "tan" ? input - Math.PI / 2 : input;
+  return Math.abs(Math.sin(normalized)) < 0.015;
 }
 
 function drawCircle() {
@@ -553,12 +622,23 @@ function drawTransformGraph() {
 
   for (let i = 0; i <= sampleCount; i++) {
     const x = xMin + (i / sampleCount) * (xMax - xMin);
-    values.push(transformValue(x, params));
+    const y = transformValue(x, params);
+    values.push(Number.isFinite(y) ? y : null);
   }
 
-  const naturalMin = Math.abs(B) < transformEpsilon ? Math.min(...values, D, 0) : D - amplitude;
-  const naturalMax = Math.abs(B) < transformEpsilon ? Math.max(...values, D, 0) : D + amplitude;
-  const span = Math.max(amplitude * 2, Math.abs(D) * 0.4, 1);
+  const tangentRadius = Math.max(4, amplitude * 4, 1);
+  const finiteValues = values.filter((value) => value !== null);
+  const naturalMin = isTanCotFamily()
+    ? D - tangentRadius
+    : Math.abs(B) < transformEpsilon
+      ? Math.min(...finiteValues, D, 0)
+      : D - amplitude;
+  const naturalMax = isTanCotFamily()
+    ? D + tangentRadius
+    : Math.abs(B) < transformEpsilon
+      ? Math.max(...finiteValues, D, 0)
+      : D + amplitude;
+  const span = Math.max(naturalMax - naturalMin, Math.abs(D) * 0.4, 1);
   const yMin = Math.min(naturalMin, 0) - span * 0.25;
   const yMax = Math.max(naturalMax, 0) + span * 0.25;
   const plot = { left: 56, top: 25, width: width - 82, height: height - 62 };
@@ -580,13 +660,69 @@ function drawTransformGraph() {
     ctx.beginPath();
 
     const segmentSteps = Math.max(48, Math.round(((upper - lower) / (xMax - xMin)) * sampleCount));
+    let drawing = false;
+    let previousPoint = null;
     for (let i = 0; i <= segmentSteps; i++) {
       const x = lower + (i / segmentSteps) * (upper - lower);
-      const p = pointFor(x, transformValue(x, params));
-      if (i === 0) ctx.moveTo(p.x, p.y);
-      else ctx.lineTo(p.x, p.y);
+      const y = transformValue(x, params);
+      const p = Number.isFinite(y) ? pointFor(x, y) : null;
+      const offCanvas = !p || p.y < plot.top - plot.height * 1.4 || p.y > plot.top + plot.height * 2.4;
+      const jumpsAcrossAsymptote =
+        isTanCotFamily() &&
+        (isNearTangentAsymptote(x, params) ||
+          (previousPoint && Math.abs(p?.y - previousPoint.y) > plot.height * 0.65));
+
+      if (offCanvas || jumpsAcrossAsymptote) {
+        drawing = false;
+        previousPoint = null;
+        continue;
+      }
+
+      if (!drawing) {
+        ctx.moveTo(p.x, p.y);
+        drawing = true;
+      } else {
+        ctx.lineTo(p.x, p.y);
+      }
+      previousPoint = p;
     }
     ctx.stroke();
+  };
+
+  const drawTangentAnchorPoints = () => {
+    if (!isTanCotFamily() || Math.abs(B) < transformEpsilon) return;
+
+    const parentInputs =
+      transformFamily === "tan"
+        ? [-Math.PI / 4, 0, Math.PI / 4]
+        : [Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4];
+
+    parentInputs.forEach((input) => {
+      const x = C + input / B;
+      const parentY = transformFamily === "tan" ? Math.tan(input) : 1 / Math.tan(input);
+      const y = A * parentY + D;
+      if (x < xMin - transformEpsilon || x > xMax + transformEpsilon || !Number.isFinite(y)) return;
+
+      const p = pointFor(x, y);
+      if (p.y < plot.top || p.y > plot.top + plot.height) return;
+
+      ctx.save();
+      ctx.shadowColor = "rgba(24, 52, 46, 0.18)";
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = colors.paper;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 8.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = transformColor();
+      ctx.strokeStyle = colors.period;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 5.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
   };
 
   ctx.clearRect(0, 0, width, height);
@@ -625,12 +761,14 @@ function drawTransformGraph() {
   }
 
   const yAxis = pointFor(0, 0).x;
-  ctx.strokeStyle = colors.ink;
-  ctx.lineWidth = 1.1;
-  ctx.beginPath();
-  ctx.moveTo(yAxis, plot.top);
-  ctx.lineTo(yAxis, plot.top + plot.height);
-  ctx.stroke();
+  if (yAxis >= plot.left && yAxis <= plot.left + plot.width) {
+    ctx.strokeStyle = colors.ink;
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(yAxis, plot.top);
+    ctx.lineTo(yAxis, plot.top + plot.height);
+    ctx.stroke();
+  }
 
   const midline = pointFor(0, D).y;
   ctx.strokeStyle = "rgba(227, 173, 62, 0.8)";
@@ -651,22 +789,26 @@ function drawTransformGraph() {
   }
   ctx.setLineDash([]);
 
-  ctx.strokeStyle = transformFamily === "sin" ? colors.sine : colors.cosine;
-  ctx.lineWidth = 3.4;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.beginPath();
-  values.forEach((y, i) => {
-    const x = xMin + (i / sampleCount) * (xMax - xMin);
-    const p = pointFor(x, y);
-    if (i === 0) ctx.moveTo(p.x, p.y);
-    else ctx.lineTo(p.x, p.y);
-  });
-  ctx.stroke();
+  if (isTanCotFamily()) {
+    const asymptotes = tangentAsymptotes(params, xMin, xMax);
+    ctx.strokeStyle = transformFamily === "tan" ? "rgba(139, 101, 166, 0.42)" : "rgba(184, 103, 42, 0.42)";
+    ctx.lineWidth = 1.7;
+    ctx.setLineDash([8, 7]);
+    asymptotes.forEach((asymptote) => {
+      const x = pointFor(asymptote, 0).x;
+      ctx.beginPath();
+      ctx.moveTo(x, plot.top);
+      ctx.lineTo(x, plot.top + plot.height);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+  }
+
+  drawCurveSegment(xMin, xMax, transformColor(), 3.4);
 
   if (Math.abs(B) >= transformEpsilon) {
-    const period = (2 * Math.PI) / Math.abs(B);
-    const increment = period / 4;
+    const period = (isTanCotFamily() ? Math.PI : 2 * Math.PI) / Math.abs(B);
+    const increment = isTanCotFamily() ? period / 2 : period / 4;
     drawCurveSegment(C, C + period, colors.period, 6.4);
 
     const xAxisLabelTop = Math.max(
@@ -675,7 +817,7 @@ function drawTransformGraph() {
     );
     const labels = [];
     const labelSpacing = (increment / (xMax - xMin)) * plot.width;
-    const labelCount = labelSpacing < 54 ? 1 : 5;
+    const labelCount = labelSpacing < 54 ? 1 : isTanCotFamily() ? 3 : 5;
     for (let i = 0; i < labelCount; i++) {
       const xValue = C + i * increment;
       if (xValue < xMin - transformEpsilon || xValue > xMax + transformEpsilon) continue;
@@ -686,6 +828,8 @@ function drawTransformGraph() {
   } else {
     renderAxisIncrementLabels([]);
   }
+
+  drawTangentAnchorPoints();
 
   renderMath(elements.transformTopLabel, formatCompactNumber(naturalMax));
   renderMath(elements.transformMidLabel, formatCompactNumber(D));
@@ -760,13 +904,13 @@ function updateReadout() {
 
 function updateTransformReadout() {
   const { A, B, C, D } = transformParameters();
-  const family = transformFamily === "sin" ? "\\sin" : "\\cos";
+  const family = transformFunctionLatex();
   const bTerm = formatPiMultiple(B);
   const dTerm = plusMinusLatex(D);
   const amplitude = Math.abs(A);
   const constantValue = transformFamily === "sin" ? D : A + D;
-  const period = Math.abs(B) < transformEpsilon ? null : (2 * Math.PI) / Math.abs(B);
-  const increment = period === null ? null : period / 4;
+  const period = Math.abs(B) < transformEpsilon ? null : (isTanCotFamily() ? Math.PI : 2 * Math.PI) / Math.abs(B);
+  const increment = period === null ? null : isTanCotFamily() ? period / 2 : period / 4;
   const rangeLow = Math.abs(B) < transformEpsilon ? constantValue : D - amplitude;
   const rangeHigh = Math.abs(B) < transformEpsilon ? constantValue : D + amplitude;
   const shiftTerm =
@@ -780,7 +924,32 @@ function updateTransformReadout() {
     elements.transformEquation,
     `y=${formatCompactNumber(A)}${family}\\left[${bTerm}\\left(x${shiftTerm}\\right)\\right]${dTerm}`,
   );
-  renderMath(elements.analysisAmplitude, formatCompactNumber(amplitude));
+
+  if (isSinCosFamily()) {
+    elements.analysisTitle.textContent = "Sin & cos metrics";
+    elements.metricNote.textContent = "Sin/cos analysis";
+    elements.analysisAmplitudeLabel.textContent = "Amplitude";
+    elements.analysisPeriodLabel.textContent = "Period";
+    elements.analysisIncrementLabel.textContent = "Increment";
+    elements.analysisHorizontalShiftLabel.textContent = "Horizontal shift";
+    elements.analysisVerticalShiftLabel.textContent = "Vertical shift";
+    elements.analysisMidlineLabel.textContent = "Equation of midline";
+    elements.analysisDomainLabel.textContent = "Domain";
+    elements.analysisRangeLabel.textContent = "Range";
+  } else {
+    elements.analysisTitle.textContent = "Tan & cot metrics";
+    elements.metricNote.textContent = "Tan/cot analysis";
+    elements.analysisAmplitudeLabel.textContent = "Vertical stretch";
+    elements.analysisPeriodLabel.textContent = "Period";
+    elements.analysisIncrementLabel.textContent = "Increment";
+    elements.analysisHorizontalShiftLabel.textContent = "Horizontal shift";
+    elements.analysisVerticalShiftLabel.textContent = "Vertical shift";
+    elements.analysisMidlineLabel.textContent = "Centerline";
+    elements.analysisDomainLabel.textContent = "Vertical asymptotes";
+    elements.analysisRangeLabel.textContent = "Range";
+  }
+
+  renderMath(elements.analysisAmplitude, isSinCosFamily() ? formatCompactNumber(amplitude) : formatCompactNumber(A));
   renderMath(elements.analysisPeriod, period === null ? "\\text{undefined}" : formatPiMultiple(period));
   renderMath(elements.analysisIncrement, increment === null ? "\\text{undefined}" : formatPiMultiple(increment));
   renderMath(
@@ -800,11 +969,23 @@ function updateTransformReadout() {
         : "0",
   );
   renderMath(elements.analysisMidline, `y=${formatCompactNumber(D)}`);
-  renderMath(elements.analysisDomain, "(-\\infty,\\infty)");
-  renderMath(
-    elements.analysisRange,
-    `\\left[${formatCompactNumber(rangeLow)},${formatCompactNumber(rangeHigh)}\\right]`,
-  );
+  if (isSinCosFamily()) {
+    renderMath(elements.analysisDomain, "(-\\infty,\\infty)");
+    renderMath(
+      elements.analysisRange,
+      `\\left[${formatCompactNumber(rangeLow)},${formatCompactNumber(rangeHigh)}\\right]`,
+    );
+  } else {
+    renderMath(
+      elements.analysisDomain,
+      Math.abs(B) < transformEpsilon
+        ? "\\text{none}"
+        : transformFamily === "tan"
+          ? `${bTerm}\\left(x${shiftTerm}\\right)=\\frac{\\pi}{2}+k\\pi`
+          : `${bTerm}\\left(x${shiftTerm}\\right)=k\\pi`,
+    );
+    renderMath(elements.analysisRange, Math.abs(A) < transformEpsilon ? `\\{${formatCompactNumber(D)}\\}` : "(-\\infty,\\infty)");
+  }
   renderMath(elements.paramBExact, bTerm);
   renderMath(elements.paramCExact, formatPiMultiple(C));
 }
