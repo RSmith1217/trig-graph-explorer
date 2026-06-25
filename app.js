@@ -270,6 +270,20 @@ function plusMinusLatex(value, formatter = formatCompactNumber) {
   return value > 0 ? `+${formatter(value)}` : `-${formatter(Math.abs(value))}`;
 }
 
+function solvedAsymptoteLatex({ B, C }, family) {
+  if (Math.abs(B) < transformEpsilon) return "\\text{none}";
+
+  const base = family === "tan" ? Math.PI / 2 : 0;
+  const firstAsymptote = C + base / B;
+  const step = Math.PI / Math.abs(B);
+  const constantTerm = formatPiMultiple(firstAsymptote);
+  const stepTerm = formatPiMultiple(step);
+  const kStepTerm = stepTerm === "1" ? "k" : `k${stepTerm}`;
+
+  if (Math.abs(firstAsymptote) < transformEpsilon) return `x=${kStepTerm}`;
+  return `x=${constantTerm}+${kStepTerm}`;
+}
+
 function transformParameters() {
   const numericValue = (element, fallback = 0) => {
     const value = Number(element.value);
@@ -707,18 +721,14 @@ function drawTransformGraph() {
     ctx.stroke();
   };
 
-  const drawTangentAnchorPoints = () => {
-    if (!isTanCotFamily() || Math.abs(B) < transformEpsilon) return;
+  const drawSinCosAnchorPoints = () => {
+    if (Math.abs(B) < transformEpsilon) return;
 
-    const parentInputs =
-      transformFamily === "tan"
-        ? [-Math.PI / 4, 0, Math.PI / 4]
-        : [Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4];
+    const parentInputs = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2, 2 * Math.PI];
 
     parentInputs.forEach((input) => {
-      const x = C + input / B;
-      const parentY = transformFamily === "tan" ? Math.tan(input) : 1 / Math.tan(input);
-      const y = A * parentY + D;
+      const x = C + input / Math.abs(B);
+      const y = transformValue(x, params);
       if (x < xMin - transformEpsilon || x > xMax + transformEpsilon || !Number.isFinite(y)) return;
 
       const p = pointFor(x, y);
@@ -733,7 +743,7 @@ function drawTransformGraph() {
       ctx.fill();
       ctx.restore();
 
-      ctx.fillStyle = transformColor();
+      ctx.fillStyle = transformColor(transformFamily);
       ctx.strokeStyle = colors.period;
       ctx.lineWidth = 2.5;
       ctx.beginPath();
@@ -847,7 +857,7 @@ function drawTransformGraph() {
     renderAxisIncrementLabels([]);
   }
 
-  drawTangentAnchorPoints();
+  drawSinCosAnchorPoints();
 
   renderMath(elements.transformTopLabel, formatCompactNumber(naturalMax));
   renderMath(elements.transformMidLabel, formatCompactNumber(D));
@@ -1218,11 +1228,7 @@ function updateTanCotReadout() {
   renderMath(elements.tanAnalysisCenterline, `y=${formatCompactNumber(D)}`);
   renderMath(
     elements.tanAnalysisAsymptotes,
-    Math.abs(B) < transformEpsilon
-      ? "\\text{none}"
-      : tanCotFamily === "tan"
-        ? `${bTerm}\\left(x${shiftTerm}\\right)=\\frac{\\pi}{2}+k\\pi`
-        : `${bTerm}\\left(x${shiftTerm}\\right)=k\\pi`,
+    solvedAsymptoteLatex({ B, C }, tanCotFamily),
   );
   renderMath(elements.tanAnalysisRange, Math.abs(A) < transformEpsilon ? `\\{${formatCompactNumber(D)}\\}` : "(-\\infty,\\infty)");
 }
