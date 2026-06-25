@@ -157,23 +157,37 @@ const exactValues = {
   360: ["0", "1", "0"],
 };
 
+function normalizeLatex(latex) {
+  return `${latex}`.trim().replace(/^\\\(/, "").replace(/\\\)$/, "");
+}
+
+function plainMath(latex) {
+  return normalizeLatex(latex)
+    .replace(/\\left|\\right/g, "")
+    .replace(/\\text\{([^}]*)\}/g, "$1")
+    .replace(/\\mathrm\{([^}]*)\}/g, "$1")
+    .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1/$2")
+    .replace(/\\sqrt\{([^{}]+)\}/g, "√$1")
+    .replace(/\\infty/g, "∞")
+    .replace(/\\pi/g, "π")
+    .replace(/\\circ/g, "°")
+    .replace(/\\,/g, " ")
+    .replace(/[{}]/g, "");
+}
+
 function renderMath(element, latex) {
-  if (element.dataset.latex === latex) return;
-  element.dataset.latex = latex;
+  const normalizedLatex = normalizeLatex(latex);
+  const renderer = window.katex ? "katex" : "text";
+  if (element.dataset.latex === normalizedLatex && element.dataset.renderer === renderer) return;
+  element.dataset.latex = normalizedLatex;
+  element.dataset.renderer = renderer;
   if (window.katex) {
-    window.katex.render(latex, element, {
+    window.katex.render(normalizedLatex, element, {
       throwOnError: false,
       strict: false,
     });
   } else {
-    element.textContent = latex
-      .replaceAll("\\frac", "")
-      .replaceAll("\\sqrt", "√")
-      .replaceAll("\\pi", "π")
-      .replaceAll("\\circ", "°")
-      .replaceAll("\\mathrm", "")
-      .replaceAll("\\text", "")
-      .replace(/[{}]/g, "");
+    element.textContent = plainMath(normalizedLatex);
   }
 }
 
@@ -1586,3 +1600,9 @@ window.addEventListener("resize", () => {
 renderStaticMath();
 render();
 renderTransform();
+
+window.addEventListener("load", () => {
+  renderStaticMath();
+  render();
+  renderTransform();
+});
