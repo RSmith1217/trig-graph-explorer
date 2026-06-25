@@ -46,6 +46,16 @@ const elements = {
   paramDNumber: document.querySelector("#paramDNumber"),
   paramBExact: document.querySelector("#paramBExact"),
   paramCExact: document.querySelector("#paramCExact"),
+  tanParamA: document.querySelector("#tanParamA"),
+  tanParamB: document.querySelector("#tanParamB"),
+  tanParamC: document.querySelector("#tanParamC"),
+  tanParamD: document.querySelector("#tanParamD"),
+  tanParamANumber: document.querySelector("#tanParamANumber"),
+  tanParamBNumber: document.querySelector("#tanParamBNumber"),
+  tanParamCNumber: document.querySelector("#tanParamCNumber"),
+  tanParamDNumber: document.querySelector("#tanParamDNumber"),
+  tanParamBExact: document.querySelector("#tanParamBExact"),
+  tanParamCExact: document.querySelector("#tanParamCExact"),
   analysisAmplitude: document.querySelector("#analysisAmplitude"),
   analysisPeriod: document.querySelector("#analysisPeriod"),
   analysisIncrement: document.querySelector("#analysisIncrement"),
@@ -1206,6 +1216,8 @@ function updateTanCotReadout() {
     elements.tanCotEquation,
     `y=${formatCompactNumber(A)}${family}\\left[${bTerm}\\left(x${shiftTerm}\\right)\\right]${dTerm}`,
   );
+  renderMath(elements.tanParamBExact, bTerm);
+  renderMath(elements.tanParamCExact, formatPiMultiple(C));
   renderMath(elements.tanAnalysisStretch, formatCompactNumber(A));
   renderMath(elements.tanAnalysisPeriod, period === null ? "\\text{undefined}" : formatPiMultiple(period));
   renderMath(elements.tanAnalysisIncrement, increment === null ? "\\text{undefined}" : formatPiMultiple(increment));
@@ -1469,12 +1481,24 @@ elements.tanCotFamilyButtons.forEach((button) => {
   });
 });
 
-const parameterPairs = [
-  [elements.paramA, elements.paramANumber],
-  [elements.paramB, elements.paramBNumber],
-  [elements.paramC, elements.paramCNumber],
-  [elements.paramD, elements.paramDNumber],
-];
+const parameterGroups = {
+  A: [
+    [elements.paramA, elements.paramANumber],
+    [elements.tanParamA, elements.tanParamANumber],
+  ],
+  B: [
+    [elements.paramB, elements.paramBNumber],
+    [elements.tanParamB, elements.tanParamBNumber],
+  ],
+  C: [
+    [elements.paramC, elements.paramCNumber],
+    [elements.tanParamC, elements.tanParamCNumber],
+  ],
+  D: [
+    [elements.paramD, elements.paramDNumber],
+    [elements.tanParamD, elements.tanParamDNumber],
+  ],
+};
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -1490,36 +1514,45 @@ function snapParameterValue(value, targetValue) {
   return Math.abs(value - targetValue) <= tolerance ? targetValue : value;
 }
 
-function snappedValueForSlider(slider, value) {
-  if (slider === elements.paramA || slider === elements.paramB) return snapParameterValue(value, 1);
-  if (slider === elements.paramC || slider === elements.paramD) return snapParameterValue(value, 0);
+function snappedValueForParameter(parameter, value) {
+  if (parameter === "A" || parameter === "B") return snapParameterValue(value, 1);
+  if (parameter === "C" || parameter === "D") return snapParameterValue(value, 0);
   return value;
 }
 
-function setParameterPairValue(slider, number, value, shouldCenterOnC = false) {
-  const min = Number(number.min);
-  const max = Number(number.max);
-  const nextValue = clamp(snappedValueForSlider(slider, value), min, max);
-  number.value = cleanParameterValue(nextValue);
-  slider.value = `${clamp(nextValue, Number(slider.min), Number(slider.max))}`;
-  if (shouldCenterOnC) {
+function setParameterValue(parameter, value, shouldCenterOnC = false) {
+  const controls = parameterGroups[parameter];
+  const [, primaryNumber] = controls[0];
+  const min = Number(primaryNumber.min);
+  const max = Number(primaryNumber.max);
+  const nextValue = clamp(snappedValueForParameter(parameter, value), min, max);
+  controls.forEach(([slider, number]) => {
+    number.value = cleanParameterValue(nextValue);
+    slider.value = `${clamp(nextValue, Number(slider.min), Number(slider.max))}`;
+  });
+  if (shouldCenterOnC || parameter === "C") {
     transformXCenter = nextValue;
     tanCotXCenter = nextValue;
   }
   renderTransform();
 }
 
-function syncParameter(source, target, slider, shouldCenterOnC = false) {
+function syncParameter(parameter, source) {
   if (source.value === "") {
-    target.value = "";
+    parameterGroups[parameter].forEach(([slider, number]) => {
+      if (source !== slider) slider.value = "";
+      if (source !== number) number.value = "";
+    });
     renderTransform();
     return;
   }
   const sourceValue = Number(source.value);
-  const nextValue = Number.isFinite(sourceValue) ? snappedValueForSlider(slider, sourceValue) : source.value;
-  source.value = cleanParameterValue(nextValue);
-  target.value = cleanParameterValue(nextValue);
-  if (shouldCenterOnC) {
+  const nextValue = Number.isFinite(sourceValue) ? snappedValueForParameter(parameter, sourceValue) : source.value;
+  parameterGroups[parameter].forEach(([slider, number]) => {
+    slider.value = cleanParameterValue(nextValue);
+    number.value = cleanParameterValue(nextValue);
+  });
+  if (parameter === "C") {
     const nextCenter = Number(nextValue);
     if (Number.isFinite(nextCenter)) {
       transformXCenter = nextCenter;
@@ -1529,10 +1562,11 @@ function syncParameter(source, target, slider, shouldCenterOnC = false) {
   renderTransform();
 }
 
-parameterPairs.forEach(([slider, number]) => {
-  const isCParameter = slider === elements.paramC;
-  slider.addEventListener("input", () => syncParameter(slider, number, slider, isCParameter));
-  number.addEventListener("input", () => syncParameter(number, slider, slider, isCParameter));
+Object.entries(parameterGroups).forEach(([parameter, controls]) => {
+  controls.forEach(([slider, number]) => {
+    slider.addEventListener("input", () => syncParameter(parameter, slider));
+    number.addEventListener("input", () => syncParameter(parameter, number));
+  });
 });
 
 elements.piStepButtons.forEach((button) => {
@@ -1540,8 +1574,7 @@ elements.piStepButtons.forEach((button) => {
     const target = button.dataset.piTarget;
     const direction = Number(button.dataset.piDirection);
     const step = Math.PI / 12;
-    const slider = target === "B" ? elements.paramB : elements.paramC;
-    const number = target === "B" ? elements.paramBNumber : elements.paramCNumber;
+    const [, number] = parameterGroups[target][0];
     const currentValue = Number(number.value) || 0;
     const rawStep = currentValue / step;
     const nearestStep = Math.round(rawStep);
@@ -1550,7 +1583,7 @@ elements.piStepButtons.forEach((button) => {
       direction > 0
         ? Math.floor(currentStep + 0.000001) + 1
         : Math.ceil(currentStep - 0.000001) - 1;
-    setParameterPairValue(slider, number, nextStep * step, target === "C");
+    setParameterValue(target, nextStep * step, target === "C");
   });
 });
 

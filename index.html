@@ -427,8 +427,51 @@
               <div class="pan-hint" aria-hidden="true">Drag or scroll sideways to pan</div>
             </div>
 
+            <div class="parameter-grid tan-cot-controls">
+              <label class="parameter-control">
+                <span><i data-math="A">A</i> Vertical stretch</span>
+                <input id="tanParamA" type="range" min="-4" max="4" step="0.25" value="1" />
+                <input id="tanParamANumber" type="number" min="-8" max="8" step="0.25" value="1" aria-label="A value for tan and cot" />
+              </label>
+              <label class="parameter-control">
+                <span><i data-math="B">B</i> Period factor</span>
+                <input id="tanParamB" type="range" min="-4" max="4" step="0.25" value="1" />
+                <input id="tanParamBNumber" type="number" min="-8" max="8" step="0.25" value="1" aria-label="B value for tan and cot" />
+                <div class="pi-stepper" aria-label="Adjust B by pi increments for tan and cot">
+                  <button type="button" data-pi-target="B" data-pi-direction="-1">
+                    <span data-math="-\frac{\pi}{12}">−π/12</span>
+                  </button>
+                  <span>π step</span>
+                  <button type="button" data-pi-target="B" data-pi-direction="1">
+                    <span data-math="+\frac{\pi}{12}">+π/12</span>
+                  </button>
+                  <output id="tanParamBExact" for="tanParamB tanParamBNumber">\(1\)</output>
+                </div>
+              </label>
+              <label class="parameter-control">
+                <span><i data-math="C">C</i> Horizontal shift</span>
+                <input id="tanParamC" type="range" min="-6.28" max="6.28" step="0.01" value="0" />
+                <input id="tanParamCNumber" type="number" min="-12.57" max="12.57" step="0.01" value="0" aria-label="C value for tan and cot" />
+                <div class="pi-stepper" aria-label="Adjust C by pi increments for tan and cot">
+                  <button type="button" data-pi-target="C" data-pi-direction="-1">
+                    <span data-math="-\frac{\pi}{12}">−π/12</span>
+                  </button>
+                  <span>π step</span>
+                  <button type="button" data-pi-target="C" data-pi-direction="1">
+                    <span data-math="+\frac{\pi}{12}">+π/12</span>
+                  </button>
+                  <output id="tanParamCExact" for="tanParamC tanParamCNumber">\(0\)</output>
+                </div>
+              </label>
+              <label class="parameter-control">
+                <span><i data-math="D">D</i> Vertical shift</span>
+                <input id="tanParamD" type="range" min="-4" max="4" step="0.25" value="0" />
+                <input id="tanParamDNumber" type="number" min="-8" max="8" step="0.25" value="0" aria-label="D value for tan and cot" />
+              </label>
+            </div>
+
             <p class="tan-cot-note">
-              Tangent and cotangent use the same transformation controls above, but their analysis changes:
+              Tangent and cotangent use the same transformation controls, but their analysis changes:
               no amplitude, no bounded range, and vertical asymptotes instead of max/min values.
             </p>
           </article>
