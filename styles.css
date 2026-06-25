@@ -808,11 +808,34 @@ input[type="range"]::-moz-range-thumb {
   font-size: 1em;
 }
 
+.lab-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+  margin: 34px 0 14px;
+}
+
+.lab-heading h2 {
+  margin: 0;
+  font-size: clamp(1.55rem, 2.8vw, 2.45rem);
+  letter-spacing: -0.05em;
+}
+
+.lab-heading .eyebrow {
+  margin: 0 0 6px;
+}
+
 .transform-lab {
   display: grid;
   grid-template-columns: minmax(270px, 0.72fr) minmax(620px, 1.55fr);
   gap: 18px;
   align-items: start;
+  margin-bottom: 20px;
+}
+
+.tan-cot-lab {
+  margin-bottom: 34px;
 }
 
 .stacked-heading {
@@ -829,7 +852,7 @@ input[type="range"]::-moz-range-thumb {
 .family-toggle {
   display: grid;
   width: 100%;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 6px;
   padding: 5px;
   border: 1px solid var(--line);
@@ -1146,7 +1169,7 @@ input[type="range"]::-moz-range-thumb {
   padding: 0 20px;
 }
 
-.tangent-metrics span {
+.tangent-metrics > span {
   display: block;
   padding: 11px 12px;
   border-radius: 12px;
@@ -1158,6 +1181,15 @@ input[type="range"]::-moz-range-thumb {
 
 .tangent-metrics .katex {
   font-size: 1em;
+}
+
+.tan-cot-note {
+  margin: 0;
+  padding: 18px 24px 22px;
+  border-top: 1px solid var(--grid);
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  line-height: 1.65;
 }
 
 footer {

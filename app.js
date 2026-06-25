@@ -1,9 +1,11 @@
 const circleCanvas = document.querySelector("#circleCanvas");
 const graphCanvas = document.querySelector("#graphCanvas");
 const transformCanvas = document.querySelector("#transformCanvas");
+const tanCotCanvas = document.querySelector("#tanCotCanvas");
 const circleCtx = circleCanvas.getContext("2d");
 const graphCtx = graphCanvas.getContext("2d");
 const transformCtx = transformCanvas.getContext("2d");
+const tanCotCtx = tanCotCanvas.getContext("2d");
 
 const elements = {
   angleValue: document.querySelector("#angleValue"),
@@ -31,10 +33,9 @@ const elements = {
   insightText: document.querySelector("#insightText"),
   modeButtons: document.querySelectorAll("[data-mode-button]"),
   appViews: document.querySelectorAll("[data-view]"),
-  analysisTitle: document.querySelector("#analysisTitle"),
-  metricNote: document.querySelector("#metricNote"),
   transformEquation: document.querySelector("#transformEquation"),
   transformFamilyButtons: document.querySelectorAll("[data-transform-family]"),
+  tanCotFamilyButtons: document.querySelectorAll("[data-tan-cot-family]"),
   paramA: document.querySelector("#paramA"),
   paramB: document.querySelector("#paramB"),
   paramC: document.querySelector("#paramC"),
@@ -45,14 +46,6 @@ const elements = {
   paramDNumber: document.querySelector("#paramDNumber"),
   paramBExact: document.querySelector("#paramBExact"),
   paramCExact: document.querySelector("#paramCExact"),
-  analysisAmplitudeLabel: document.querySelector("#analysisAmplitudeLabel"),
-  analysisPeriodLabel: document.querySelector("#analysisPeriodLabel"),
-  analysisIncrementLabel: document.querySelector("#analysisIncrementLabel"),
-  analysisHorizontalShiftLabel: document.querySelector("#analysisHorizontalShiftLabel"),
-  analysisVerticalShiftLabel: document.querySelector("#analysisVerticalShiftLabel"),
-  analysisMidlineLabel: document.querySelector("#analysisMidlineLabel"),
-  analysisDomainLabel: document.querySelector("#analysisDomainLabel"),
-  analysisRangeLabel: document.querySelector("#analysisRangeLabel"),
   analysisAmplitude: document.querySelector("#analysisAmplitude"),
   analysisPeriod: document.querySelector("#analysisPeriod"),
   analysisIncrement: document.querySelector("#analysisIncrement"),
@@ -68,6 +61,22 @@ const elements = {
   transformXCenterLabel: document.querySelector("#transformXCenterLabel"),
   transformXRightLabel: document.querySelector("#transformXRightLabel"),
   transformAxisLabels: document.querySelector("#transformAxisLabels"),
+  tanCotEquation: document.querySelector("#tanCotEquation"),
+  tanAnalysisStretch: document.querySelector("#tanAnalysisStretch"),
+  tanAnalysisPeriod: document.querySelector("#tanAnalysisPeriod"),
+  tanAnalysisIncrement: document.querySelector("#tanAnalysisIncrement"),
+  tanAnalysisHorizontalShift: document.querySelector("#tanAnalysisHorizontalShift"),
+  tanAnalysisVerticalShift: document.querySelector("#tanAnalysisVerticalShift"),
+  tanAnalysisCenterline: document.querySelector("#tanAnalysisCenterline"),
+  tanAnalysisAsymptotes: document.querySelector("#tanAnalysisAsymptotes"),
+  tanAnalysisRange: document.querySelector("#tanAnalysisRange"),
+  tanCotTopLabel: document.querySelector("#tanCotTopLabel"),
+  tanCotMidLabel: document.querySelector("#tanCotMidLabel"),
+  tanCotBottomLabel: document.querySelector("#tanCotBottomLabel"),
+  tanCotXLeftLabel: document.querySelector("#tanCotXLeftLabel"),
+  tanCotXCenterLabel: document.querySelector("#tanCotXCenterLabel"),
+  tanCotXRightLabel: document.querySelector("#tanCotXRightLabel"),
+  tanCotAxisLabels: document.querySelector("#tanCotAxisLabels"),
   piStepButtons: document.querySelectorAll("[data-pi-target]"),
 };
 
@@ -91,10 +100,15 @@ let dragging = false;
 let lastFrame = 0;
 let activeView = "explore";
 let transformFamily = "sin";
+let tanCotFamily = "tan";
 let transformXCenter = 0;
+let tanCotXCenter = 0;
 let transformDragging = false;
 let transformDragStartX = 0;
 let transformDragStartCenter = 0;
+let tanCotDragging = false;
+let tanCotDragStartX = 0;
+let tanCotDragStartCenter = 0;
 const transformEpsilon = 0.01;
 
 const specialAngles = [
@@ -270,40 +284,44 @@ function transformParameters() {
   };
 }
 
-function isSinCosFamily() {
-  return transformFamily === "sin" || transformFamily === "cos";
+function isSinCosFamily(family = transformFamily) {
+  return family === "sin" || family === "cos";
 }
 
-function isTanCotFamily() {
-  return transformFamily === "tan" || transformFamily === "cot";
+function isTanCotFamily(family = transformFamily) {
+  return family === "tan" || family === "cot";
 }
 
-function transformFunctionLatex() {
+function transformFunctionLatex(family = transformFamily) {
   return {
     sin: "\\sin",
     cos: "\\cos",
     tan: "\\tan",
     cot: "\\cot",
-  }[transformFamily];
+  }[family];
 }
 
-function transformColor() {
+function transformColor(family = transformFamily) {
   return {
     sin: colors.sine,
     cos: colors.cosine,
     tan: colors.tangent,
     cot: colors.cotangent,
-  }[transformFamily];
+  }[family];
 }
 
-function transformValue(x, { A, B, C, D }) {
+function transformedTrigValue(family, x, { A, B, C, D }) {
   const input = B * (x - C);
-  if (transformFamily === "sin") return A * Math.sin(input) + D;
-  if (transformFamily === "cos") return A * Math.cos(input) + D;
-  if (transformFamily === "tan") return A * Math.tan(input) + D;
+  if (family === "sin") return A * Math.sin(input) + D;
+  if (family === "cos") return A * Math.cos(input) + D;
+  if (family === "tan") return A * Math.tan(input) + D;
 
   const tangent = Math.tan(input);
   return A * (Math.abs(tangent) < 0.000001 ? Infinity : 1 / tangent) + D;
+}
+
+function transformValue(x, params) {
+  return transformedTrigValue(transformFamily, x, params);
 }
 
 function niceGridStep(target) {
@@ -314,23 +332,23 @@ function niceGridStep(target) {
   return niceBase * 10 ** exponent;
 }
 
-function renderAxisIncrementLabels(labels) {
-  elements.transformAxisLabels.replaceChildren();
+function renderAxisIncrementLabels(labels, container = elements.transformAxisLabels) {
+  container.replaceChildren();
   labels.forEach(({ latex, left, top }) => {
     const label = document.createElement("div");
     label.className = "axis-increment-label";
     label.style.left = `${left}px`;
     label.style.top = `${top}px`;
-    elements.transformAxisLabels.append(label);
+    container.append(label);
     renderMath(label, latex);
   });
 }
 
-function tangentAsymptotes({ B, C }, xMin, xMax) {
-  if (Math.abs(B) < transformEpsilon || !isTanCotFamily()) return [];
+function tangentAsymptotes({ B, C }, xMin, xMax, family = transformFamily) {
+  if (Math.abs(B) < transformEpsilon || !isTanCotFamily(family)) return [];
 
   const asymptotes = [];
-  const base = transformFamily === "tan" ? Math.PI / 2 : 0;
+  const base = family === "tan" ? Math.PI / 2 : 0;
   const inputA = B * (xMin - C);
   const inputB = B * (xMax - C);
   const inputMin = Math.min(inputA, inputB);
@@ -346,10 +364,10 @@ function tangentAsymptotes({ B, C }, xMin, xMax) {
   return [...new Set(asymptotes.map((x) => Number(x.toFixed(10))))].sort((a, b) => a - b);
 }
 
-function isNearTangentAsymptote(x, params) {
-  if (!isTanCotFamily()) return false;
+function isNearTangentAsymptote(x, params, family = transformFamily) {
+  if (!isTanCotFamily(family)) return false;
   const input = params.B * (x - params.C);
-  const normalized = transformFamily === "tan" ? input - Math.PI / 2 : input;
+  const normalized = family === "tan" ? input - Math.PI / 2 : input;
   return Math.abs(Math.sin(normalized)) < 0.015;
 }
 
@@ -841,6 +859,212 @@ function drawTransformGraph() {
   transformCanvas._geometry = { plot, xMin, xMax, yMin, yMax, yGridStep };
 }
 
+function drawTanCotGraph() {
+  if (activeView !== "transform") return;
+
+  const { width, height } = setupCanvas(tanCotCanvas, tanCotCtx);
+  if (!width || !height) return;
+
+  const ctx = tanCotCtx;
+  const params = transformParameters();
+  const { A, B, C, D } = params;
+  const xSpan = 4 * Math.PI;
+  const xMin = tanCotXCenter - xSpan / 2;
+  const xMax = tanCotXCenter + xSpan / 2;
+  const stretch = Math.abs(A);
+  const sampleCount = 420;
+  const tangentRadius = Math.max(4, stretch * 4, 1);
+  const naturalMin = D - tangentRadius;
+  const naturalMax = D + tangentRadius;
+  const span = Math.max(naturalMax - naturalMin, Math.abs(D) * 0.4, 1);
+  const yMin = Math.min(naturalMin, 0) - span * 0.25;
+  const yMax = Math.max(naturalMax, 0) + span * 0.25;
+  const plot = { left: 56, top: 25, width: width - 82, height: height - 62 };
+
+  const pointFor = (x, y) => ({
+    x: plot.left + ((x - xMin) / (xMax - xMin)) * plot.width,
+    y: plot.top + ((yMax - y) / (yMax - yMin)) * plot.height,
+  });
+
+  const drawCurveSegment = (startX, endX, color, lineWidth) => {
+    const lower = Math.max(xMin, Math.min(startX, endX));
+    const upper = Math.min(xMax, Math.max(startX, endX));
+    if (upper <= lower) return;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+
+    const segmentSteps = Math.max(48, Math.round(((upper - lower) / (xMax - xMin)) * sampleCount));
+    let drawing = false;
+    let previousPoint = null;
+    for (let i = 0; i <= segmentSteps; i++) {
+      const x = lower + (i / segmentSteps) * (upper - lower);
+      const y = transformedTrigValue(tanCotFamily, x, params);
+      const p = Number.isFinite(y) ? pointFor(x, y) : null;
+      const offCanvas = !p || p.y < plot.top - plot.height * 1.4 || p.y > plot.top + plot.height * 2.4;
+      const jumpsAcrossAsymptote =
+        isNearTangentAsymptote(x, params, tanCotFamily) ||
+        (previousPoint && Math.abs(p?.y - previousPoint.y) > plot.height * 0.65);
+
+      if (offCanvas || jumpsAcrossAsymptote) {
+        drawing = false;
+        previousPoint = null;
+        continue;
+      }
+
+      if (!drawing) {
+        ctx.moveTo(p.x, p.y);
+        drawing = true;
+      } else {
+        ctx.lineTo(p.x, p.y);
+      }
+      previousPoint = p;
+    }
+    ctx.stroke();
+  };
+
+  const drawAnchorPoints = () => {
+    if (Math.abs(B) < transformEpsilon) return;
+
+    const parentInputs =
+      tanCotFamily === "tan"
+        ? [-Math.PI / 4, 0, Math.PI / 4]
+        : [Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4];
+
+    parentInputs.forEach((input) => {
+      const x = C + input / B;
+      const parentY = tanCotFamily === "tan" ? Math.tan(input) : 1 / Math.tan(input);
+      const y = A * parentY + D;
+      if (x < xMin - transformEpsilon || x > xMax + transformEpsilon || !Number.isFinite(y)) return;
+
+      const p = pointFor(x, y);
+      if (p.y < plot.top || p.y > plot.top + plot.height) return;
+
+      ctx.save();
+      ctx.shadowColor = "rgba(24, 52, 46, 0.18)";
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = colors.paper;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 8.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = transformColor(tanCotFamily);
+      ctx.strokeStyle = colors.period;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 5.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+  };
+
+  ctx.clearRect(0, 0, width, height);
+
+  ctx.strokeStyle = colors.grid;
+  ctx.lineWidth = 1;
+  const xGridStep = Math.PI / 2;
+  const firstXGrid = Math.ceil(xMin / xGridStep) * xGridStep;
+  for (let xValue = firstXGrid; xValue <= xMax + transformEpsilon; xValue += xGridStep) {
+    const x = pointFor(xValue, 0).x;
+    ctx.beginPath();
+    ctx.moveTo(x, plot.top);
+    ctx.lineTo(x, plot.top + plot.height);
+    ctx.stroke();
+  }
+
+  const targetYStep = (yMax - yMin) / 8;
+  const yGridStep = stretch >= 1 ? Math.max(1, niceGridStep(targetYStep)) : niceGridStep(targetYStep);
+  const firstYGrid = Math.ceil(yMin / yGridStep) * yGridStep;
+  for (let yValue = firstYGrid; yValue <= yMax + transformEpsilon; yValue += yGridStep) {
+    const y = pointFor(0, yValue).y;
+    ctx.beginPath();
+    ctx.moveTo(plot.left, y);
+    ctx.lineTo(plot.left + plot.width, y);
+    ctx.stroke();
+  }
+
+  const xAxis = pointFor(0, 0).y;
+  if (xAxis >= plot.top && xAxis <= plot.top + plot.height) {
+    ctx.strokeStyle = colors.ink;
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(plot.left, xAxis);
+    ctx.lineTo(plot.left + plot.width, xAxis);
+    ctx.stroke();
+  }
+
+  const yAxis = pointFor(0, 0).x;
+  if (yAxis >= plot.left && yAxis <= plot.left + plot.width) {
+    ctx.strokeStyle = colors.ink;
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(yAxis, plot.top);
+    ctx.lineTo(yAxis, plot.top + plot.height);
+    ctx.stroke();
+  }
+
+  const centerline = pointFor(0, D).y;
+  ctx.strokeStyle = "rgba(227, 173, 62, 0.8)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([7, 6]);
+  ctx.beginPath();
+  ctx.moveTo(plot.left, centerline);
+  ctx.lineTo(plot.left + plot.width, centerline);
+  ctx.stroke();
+
+  const asymptotes = tangentAsymptotes(params, xMin, xMax, tanCotFamily);
+  ctx.strokeStyle = tanCotFamily === "tan" ? "rgba(139, 101, 166, 0.42)" : "rgba(184, 103, 42, 0.42)";
+  ctx.lineWidth = 1.7;
+  ctx.setLineDash([8, 7]);
+  asymptotes.forEach((asymptote) => {
+    const x = pointFor(asymptote, 0).x;
+    ctx.beginPath();
+    ctx.moveTo(x, plot.top);
+    ctx.lineTo(x, plot.top + plot.height);
+    ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  drawCurveSegment(xMin, xMax, transformColor(tanCotFamily), 3.4);
+
+  if (Math.abs(B) >= transformEpsilon) {
+    const period = Math.PI / Math.abs(B);
+    const increment = period / 2;
+    drawCurveSegment(C, C + period, colors.period, 6.4);
+
+    const xAxisLabelTop = Math.max(
+      plot.top + 8,
+      Math.min(plot.top + plot.height - 26, (xAxis >= plot.top && xAxis <= plot.top + plot.height ? xAxis : plot.top + plot.height) + 8),
+    );
+    const labels = [];
+    const labelSpacing = (increment / (xMax - xMin)) * plot.width;
+    const labelCount = labelSpacing < 54 ? 1 : 3;
+    for (let i = 0; i < labelCount; i++) {
+      const xValue = C + i * increment;
+      if (xValue < xMin - transformEpsilon || xValue > xMax + transformEpsilon) continue;
+      labels.push({ latex: formatPiMultiple(xValue), left: pointFor(xValue, 0).x, top: xAxisLabelTop });
+    }
+    renderAxisIncrementLabels(labels, elements.tanCotAxisLabels);
+  } else {
+    renderAxisIncrementLabels([], elements.tanCotAxisLabels);
+  }
+
+  drawAnchorPoints();
+
+  renderMath(elements.tanCotTopLabel, formatCompactNumber(naturalMax));
+  renderMath(elements.tanCotMidLabel, formatCompactNumber(D));
+  renderMath(elements.tanCotBottomLabel, formatCompactNumber(naturalMin));
+  renderMath(elements.tanCotXLeftLabel, formatPiMultiple(xMin));
+  renderMath(elements.tanCotXCenterLabel, formatPiMultiple(tanCotXCenter));
+  renderMath(elements.tanCotXRightLabel, formatPiMultiple(xMax));
+
+  tanCotCanvas._geometry = { plot, xMin, xMax, yMin, yMax, yGridStep };
+}
+
 function updateReadout() {
   const deg = degrees();
   const exact = exactForAngle();
@@ -909,8 +1133,8 @@ function updateTransformReadout() {
   const dTerm = plusMinusLatex(D);
   const amplitude = Math.abs(A);
   const constantValue = transformFamily === "sin" ? D : A + D;
-  const period = Math.abs(B) < transformEpsilon ? null : (isTanCotFamily() ? Math.PI : 2 * Math.PI) / Math.abs(B);
-  const increment = period === null ? null : isTanCotFamily() ? period / 2 : period / 4;
+  const period = Math.abs(B) < transformEpsilon ? null : (2 * Math.PI) / Math.abs(B);
+  const increment = period === null ? null : period / 4;
   const rangeLow = Math.abs(B) < transformEpsilon ? constantValue : D - amplitude;
   const rangeHigh = Math.abs(B) < transformEpsilon ? constantValue : D + amplitude;
   const shiftTerm =
@@ -925,31 +1149,7 @@ function updateTransformReadout() {
     `y=${formatCompactNumber(A)}${family}\\left[${bTerm}\\left(x${shiftTerm}\\right)\\right]${dTerm}`,
   );
 
-  if (isSinCosFamily()) {
-    elements.analysisTitle.textContent = "Sin & cos metrics";
-    elements.metricNote.textContent = "Sin/cos analysis";
-    elements.analysisAmplitudeLabel.textContent = "Amplitude";
-    elements.analysisPeriodLabel.textContent = "Period";
-    elements.analysisIncrementLabel.textContent = "Increment";
-    elements.analysisHorizontalShiftLabel.textContent = "Horizontal shift";
-    elements.analysisVerticalShiftLabel.textContent = "Vertical shift";
-    elements.analysisMidlineLabel.textContent = "Equation of midline";
-    elements.analysisDomainLabel.textContent = "Domain";
-    elements.analysisRangeLabel.textContent = "Range";
-  } else {
-    elements.analysisTitle.textContent = "Tan & cot metrics";
-    elements.metricNote.textContent = "Tan/cot analysis";
-    elements.analysisAmplitudeLabel.textContent = "Vertical stretch";
-    elements.analysisPeriodLabel.textContent = "Period";
-    elements.analysisIncrementLabel.textContent = "Increment";
-    elements.analysisHorizontalShiftLabel.textContent = "Horizontal shift";
-    elements.analysisVerticalShiftLabel.textContent = "Vertical shift";
-    elements.analysisMidlineLabel.textContent = "Centerline";
-    elements.analysisDomainLabel.textContent = "Vertical asymptotes";
-    elements.analysisRangeLabel.textContent = "Range";
-  }
-
-  renderMath(elements.analysisAmplitude, isSinCosFamily() ? formatCompactNumber(amplitude) : formatCompactNumber(A));
+  renderMath(elements.analysisAmplitude, formatCompactNumber(amplitude));
   renderMath(elements.analysisPeriod, period === null ? "\\text{undefined}" : formatPiMultiple(period));
   renderMath(elements.analysisIncrement, increment === null ? "\\text{undefined}" : formatPiMultiple(increment));
   renderMath(
@@ -969,25 +1169,62 @@ function updateTransformReadout() {
         : "0",
   );
   renderMath(elements.analysisMidline, `y=${formatCompactNumber(D)}`);
-  if (isSinCosFamily()) {
-    renderMath(elements.analysisDomain, "(-\\infty,\\infty)");
-    renderMath(
-      elements.analysisRange,
-      `\\left[${formatCompactNumber(rangeLow)},${formatCompactNumber(rangeHigh)}\\right]`,
-    );
-  } else {
-    renderMath(
-      elements.analysisDomain,
-      Math.abs(B) < transformEpsilon
-        ? "\\text{none}"
-        : transformFamily === "tan"
-          ? `${bTerm}\\left(x${shiftTerm}\\right)=\\frac{\\pi}{2}+k\\pi`
-          : `${bTerm}\\left(x${shiftTerm}\\right)=k\\pi`,
-    );
-    renderMath(elements.analysisRange, Math.abs(A) < transformEpsilon ? `\\{${formatCompactNumber(D)}\\}` : "(-\\infty,\\infty)");
-  }
+  renderMath(elements.analysisDomain, "(-\\infty,\\infty)");
+  renderMath(
+    elements.analysisRange,
+    `\\left[${formatCompactNumber(rangeLow)},${formatCompactNumber(rangeHigh)}\\right]`,
+  );
   renderMath(elements.paramBExact, bTerm);
   renderMath(elements.paramCExact, formatPiMultiple(C));
+}
+
+function updateTanCotReadout() {
+  const { A, B, C, D } = transformParameters();
+  const family = transformFunctionLatex(tanCotFamily);
+  const bTerm = formatPiMultiple(B);
+  const dTerm = plusMinusLatex(D);
+  const period = Math.abs(B) < transformEpsilon ? null : Math.PI / Math.abs(B);
+  const increment = period === null ? null : period / 2;
+  const shiftTerm =
+    C < -transformEpsilon
+      ? `+${formatPiMultiple(Math.abs(C))}`
+      : C > transformEpsilon
+        ? `-${formatPiMultiple(C)}`
+        : "";
+
+  renderMath(
+    elements.tanCotEquation,
+    `y=${formatCompactNumber(A)}${family}\\left[${bTerm}\\left(x${shiftTerm}\\right)\\right]${dTerm}`,
+  );
+  renderMath(elements.tanAnalysisStretch, formatCompactNumber(A));
+  renderMath(elements.tanAnalysisPeriod, period === null ? "\\text{undefined}" : formatPiMultiple(period));
+  renderMath(elements.tanAnalysisIncrement, increment === null ? "\\text{undefined}" : formatPiMultiple(increment));
+  renderMath(
+    elements.tanAnalysisHorizontalShift,
+    C > transformEpsilon
+      ? `${formatPiMultiple(C)}\\text{ right}`
+      : C < -transformEpsilon
+        ? `${formatPiMultiple(Math.abs(C))}\\text{ left}`
+        : "0",
+  );
+  renderMath(
+    elements.tanAnalysisVerticalShift,
+    D > 0.0005
+      ? `${formatCompactNumber(D)}\\text{ up}`
+      : D < -0.0005
+        ? `${formatCompactNumber(Math.abs(D))}\\text{ down}`
+        : "0",
+  );
+  renderMath(elements.tanAnalysisCenterline, `y=${formatCompactNumber(D)}`);
+  renderMath(
+    elements.tanAnalysisAsymptotes,
+    Math.abs(B) < transformEpsilon
+      ? "\\text{none}"
+      : tanCotFamily === "tan"
+        ? `${bTerm}\\left(x${shiftTerm}\\right)=\\frac{\\pi}{2}+k\\pi`
+        : `${bTerm}\\left(x${shiftTerm}\\right)=k\\pi`,
+  );
+  renderMath(elements.tanAnalysisRange, Math.abs(A) < transformEpsilon ? `\\{${formatCompactNumber(D)}\\}` : "(-\\infty,\\infty)");
 }
 
 function render() {
@@ -999,6 +1236,8 @@ function render() {
 function renderTransform() {
   updateTransformReadout();
   drawTransformGraph();
+  updateTanCotReadout();
+  drawTanCotGraph();
 }
 
 function setActiveView(view) {
@@ -1066,6 +1305,11 @@ function setTransformXCenter(value) {
   renderTransform();
 }
 
+function setTanCotXCenter(value) {
+  tanCotXCenter = value;
+  renderTransform();
+}
+
 transformCanvas.addEventListener("pointerdown", (event) => {
   transformDragging = true;
   transformDragStartX = event.clientX;
@@ -1097,6 +1341,41 @@ transformCanvas.addEventListener(
     const horizontalDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
     const xUnitsPerPixel = (xMax - xMin) / plot.width;
     setTransformXCenter(transformXCenter + horizontalDelta * xUnitsPerPixel);
+  },
+  { passive: false },
+);
+
+tanCotCanvas.addEventListener("pointerdown", (event) => {
+  tanCotDragging = true;
+  tanCotDragStartX = event.clientX;
+  tanCotDragStartCenter = tanCotXCenter;
+  tanCotCanvas.setPointerCapture(event.pointerId);
+});
+
+tanCotCanvas.addEventListener("pointermove", (event) => {
+  if (!tanCotDragging || !tanCotCanvas._geometry) return;
+  const { plot, xMin, xMax } = tanCotCanvas._geometry;
+  const xUnitsPerPixel = (xMax - xMin) / plot.width;
+  setTanCotXCenter(tanCotDragStartCenter - (event.clientX - tanCotDragStartX) * xUnitsPerPixel);
+});
+
+tanCotCanvas.addEventListener("pointerup", () => {
+  tanCotDragging = false;
+});
+
+tanCotCanvas.addEventListener("pointercancel", () => {
+  tanCotDragging = false;
+});
+
+tanCotCanvas.addEventListener(
+  "wheel",
+  (event) => {
+    if (!tanCotCanvas._geometry) return;
+    event.preventDefault();
+    const { plot, xMin, xMax } = tanCotCanvas._geometry;
+    const horizontalDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+    const xUnitsPerPixel = (xMax - xMin) / plot.width;
+    setTanCotXCenter(tanCotXCenter + horizontalDelta * xUnitsPerPixel);
   },
   { passive: false },
 );
@@ -1174,6 +1453,16 @@ elements.transformFamilyButtons.forEach((button) => {
   });
 });
 
+elements.tanCotFamilyButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    tanCotFamily = button.dataset.tanCotFamily;
+    elements.tanCotFamilyButtons.forEach((familyButton) => {
+      familyButton.classList.toggle("active", familyButton === button);
+    });
+    renderTransform();
+  });
+});
+
 const parameterPairs = [
   [elements.paramA, elements.paramANumber],
   [elements.paramB, elements.paramBNumber],
@@ -1207,7 +1496,10 @@ function setParameterPairValue(slider, number, value, shouldCenterOnC = false) {
   const nextValue = clamp(snappedValueForSlider(slider, value), min, max);
   number.value = cleanParameterValue(nextValue);
   slider.value = `${clamp(nextValue, Number(slider.min), Number(slider.max))}`;
-  if (shouldCenterOnC) transformXCenter = nextValue;
+  if (shouldCenterOnC) {
+    transformXCenter = nextValue;
+    tanCotXCenter = nextValue;
+  }
   renderTransform();
 }
 
@@ -1223,7 +1515,10 @@ function syncParameter(source, target, slider, shouldCenterOnC = false) {
   target.value = cleanParameterValue(nextValue);
   if (shouldCenterOnC) {
     const nextCenter = Number(nextValue);
-    if (Number.isFinite(nextCenter)) transformXCenter = nextCenter;
+    if (Number.isFinite(nextCenter)) {
+      transformXCenter = nextCenter;
+      tanCotXCenter = nextCenter;
+    }
   }
   renderTransform();
 }
